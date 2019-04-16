@@ -39,6 +39,8 @@ if __name__ == '__main__':
                 full_img_name = os.path.join(data_dir,img_name)
                 if not os.path.exists(full_img_name):
                     raise Exception("File not exist")
+                else:
+                    print("Test")
     print(WSI_pairs)
 
 
