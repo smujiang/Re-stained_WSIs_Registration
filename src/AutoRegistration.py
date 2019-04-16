@@ -51,6 +51,7 @@ Raw_FFT_lv3, scores_FFT_lv3 = raw_reg(HE_Imgs_lv3, IHC_Imgs_lv3, method="FFT")
 Raw_FFT_lv2, scores_FFT_lv2 = raw_reg(HE_Imgs_lv2, IHC_Imgs_lv2, method="FFT")
 Raw_FFT_lv1, scores_FFT_lv1 = raw_reg(HE_Imgs_lv1, IHC_Imgs_lv1, method="FFT")
 if VERBOSE:
+    # Prove that it's impossible to directly match at highest resolution
     Raw_FFT_lv0, scores_FFT_lv0 = raw_reg(HE_Imgs_lv0, IHC_Imgs_lv0, method="FFT")
 
 if not RELEASE:
