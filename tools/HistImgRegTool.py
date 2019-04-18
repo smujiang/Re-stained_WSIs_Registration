@@ -1,13 +1,15 @@
-import sys,os
+import sys, os
 import openslide
 import math
 import numpy as np
 from PIL import Image
 from PIL.ImageQt import ImageQt
-from PyQt5.QtCore import QDir,Qt,pyqtSlot,QCoreApplication,QMetaObject, QObject, QPoint,QEvent
+from PyQt5.QtCore import QDir, Qt, pyqtSlot, QCoreApplication, QMetaObject, QObject, QPoint, QEvent
 from PyQt5.QtGui import QImage, QPainter, QPalette, QPixmap, QPicture, QCursor, QPen
-from PyQt5.QtWidgets import (QAction,QVBoxLayout, QHBoxLayout,QPushButton,QCheckBox,QWidget,QApplication, QFileDialog, QLabel,
-        QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy, QTextEdit, QLineEdit, QLayout, QComboBox, QSpinBox,QDoubleSpinBox )
+from PyQt5.QtWidgets import (QAction, QVBoxLayout, QHBoxLayout, QPushButton, QCheckBox, QWidget, QApplication,
+                             QFileDialog, QLabel,
+                             QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy, QTextEdit, QLineEdit, QLayout,
+                             QComboBox, QSpinBox, QDoubleSpinBox)
 
 
 class ImgRegistration(QWidget):
@@ -92,14 +94,15 @@ class ImgRegistration(QWidget):
 
         self.T_Orig_X_Coord = 21000
         self.T_Orig_Y_Coord = 21000
-        self.F_Orig_X_Coord = 21291  #  21249 + 42
-        self.F_Orig_Y_Coord = 21054
+        self.F_Orig_X_Coord = 21000  # 21249 + 42
+        self.F_Orig_Y_Coord = 21000
+        self.init_offset = [291, 54]
         self.F_Angle = 0
 
-        self.F_Adj_X_Coord = 0
-        self.F_Adj_Y_Coord = 0
-        self.F_Adj_Spinbox_X = 0
-        self.F_Adj_Spinbox_Y = 0
+        self.F_Pre_Spinbox_X = 0
+        self.F_Pre_Spinbox_Y = 0
+        self.F_Abs_X_Coord = self.F_Orig_X_Coord + self.init_offset[0] + self.F_Pre_Spinbox_X
+        self.F_Abs_Y_Coord = self.F_Orig_Y_Coord + self.init_offset[1] + self.F_Pre_Spinbox_Y
 
         self.sd_fix = None
         self.sd_float = None
@@ -117,7 +120,7 @@ class ImgRegistration(QWidget):
 
     def initUI(self):
         self.setWindowTitle("Image Registration")
-        self.setGeometry(self.left+30, self.top+30, self.width, self.height)
+        self.setGeometry(self.left + 30, self.top + 30, self.width, self.height)
         self.EditImgPatchSize.setFixedWidth(50)
         pixmap_it = QPixmap(500, 500)
         pixmap_it.fill(Qt.white)
@@ -153,15 +156,12 @@ class ImgRegistration(QWidget):
         self.AutoRegButton.setStyleSheet("background-color: green;")
         # self.EditAbsCoordinateTemplateX.editingFinished.connect(self.ROITemplateX_Change)
         # self.EditAbsCoordinateTemplateY.editingFinished.connect(self.ROITemplateY_Change)
-        # self.EditAbsCoordinateFloatX.editingFinished.connect(self.ROIFloatX_Change)
-        # self.EditAbsCoordinateFloatY.editingFinished.connect(self.ROIFloatY_Change)
         self.EditAbsCoordinateTemplateX.textChanged.connect(self.ROITemplateX_Change)
         self.EditAbsCoordinateTemplateY.textChanged.connect(self.ROITemplateY_Change)
-        self.EditAbsCoordinateFloatX.textChanged.connect(self.ROIFloatX_Change)
-        self.EditAbsCoordinateFloatY.textChanged.connect(self.ROIFloatY_Change)
+
         self.EditImgPatchSize.editingFinished.connect(self.ImgPatchSize_Change)
-        self.BoxOffsetY.valueChanged.connect(self.OffsetY_Change)
         self.BoxOffsetX.valueChanged.connect(self.OffsetX_Change)
+        self.BoxOffsetY.valueChanged.connect(self.OffsetY_Change)
         self.BoxAngle.valueChanged.connect(self.Angle_Change)
         self.OpenTemplateButton.clicked.connect(self.openTemplate)
         self.OpenFloatButton.clicked.connect(self.openFloating)
@@ -188,49 +188,63 @@ class ImgRegistration(QWidget):
             self.FloatPixmap = QPixmap.fromImage(pixmap_float)
             self.FloatImageLabel.setPixmap(self.FloatPixmap)
             self.ImgPatchSize = x
-            self.ImgPatchSize_display.setText("*"+str(x))
-
-    def ROIFloatX_Change(self):
-        if self.Float_Load:
-            self.updateFloatImg()
-            self.F_Adj_X_Coord = self.F_Orig_X_Coord + self.BoxOffsetX.value()
-            self.F_Orig_X_Coord = int(self.EditAbsCoordinateFloatX.text())
-        print("" + str(self.F_Orig_X_Coord))
-
-    def ROIFloatY_Change(self):
-        if self.Float_Load:
-            self.updateFloatImg()
-            self.F_Adj_Y_Coord = self.F_Orig_Y_Coord + self.BoxOffsetY.value()
-            self.F_Orig_Y_Coord = int(self.EditAbsCoordinateFloatY.text())
-        print("" + str(self.F_Orig_Y_Coord))
+            self.ImgPatchSize_display.setText("*" + str(x))
 
     def ROITemplateX_Change(self):
         if self.Template_Load:
-            self.updateTemplateImg()
             self.T_Orig_X_Coord = int(self.EditAbsCoordinateTemplateX.text())
+            self.updateTemplateImg()
+            # self.ROIFloatX_Change()
         print("" + str(self.T_Orig_X_Coord))
 
     def ROITemplateY_Change(self):
         if self.Template_Load:
-            self.updateTemplateImg()
             self.T_Orig_Y_Coord = int(self.EditAbsCoordinateTemplateY.text())
+            self.updateTemplateImg()
+            # self.ROIFloatY_Change()
         print("" + str(self.T_Orig_Y_Coord))
 
-    def OffsetY_Change(self):
-        if self.F_Adj_Spinbox_Y > self.BoxOffsetY.value():
-            self.F_Adj_Y_Coord = self.F_Orig_Y_Coord + self.BoxOffsetY.singleStep()
-        elif self.F_Adj_Spinbox_Y < self.BoxOffsetY.value():
-            self.F_Adj_Y_Coord = self.F_Orig_Y_Coord - self.BoxOffsetY.singleStep()
-        self.EditAbsCoordinateFloatY.setText(str(self.F_Adj_Y_Coord))
-        self.F_Adj_Spinbox_Y = self.BoxOffsetY.value()
+    # def ROIFloatX_Change(self):
+    #     if self.Float_Load:
+    #         self.F_Orig_X_Coord = int(self.EditAbsCoordinateTemplateX.text())
+    #         self.F_Abs_X_Coord = self.F_Orig_X_Coord+self.init_offset[0]+self.F_Pre_Spinbox_X
+    #         self.EditAbsCoordinateFloatX.setText(str(self.F_Abs_X_Coord))
+    #         self.updateFloatImg()
+    #     print("" + str(self.F_Orig_X_Coord))
+    #
+    # def ROIFloatY_Change(self):
+    #     if self.Float_Load:
+    #         self.F_Orig_Y_Coord = int(self.EditAbsCoordinateTemplateY.text())
+    #         self.F_Abs_Y_Coord = self.F_Orig_Y_Coord+self.init_offset[1]+self.F_Pre_Spinbox_Y
+    #         self.EditAbsCoordinateFloatY.setText(str(self.F_Abs_Y_Coord))
+    #         self.updateFloatImg()
+    #     print("" + str(self.F_Orig_Y_Coord))
 
     def OffsetX_Change(self):
-        if self.F_Adj_Spinbox_X > self.BoxOffsetX.value():
-            self.F_Adj_X_Coord = self.F_Orig_X_Coord + self.BoxOffsetX.singleStep()
-        elif self.F_Adj_Spinbox_X < self.BoxOffsetX.value():
-            self.F_Adj_X_Coord = self.F_Orig_X_Coord - self.BoxOffsetX.singleStep()
-        self.EditAbsCoordinateFloatX.setText(str(self.F_Adj_X_Coord))
-        self.F_Adj_Spinbox_X = self.BoxOffsetX.value()
+        # value_increase = self.BoxOffsetX.value()-self.F_Pre_Spinbox_X
+        # self.F_Pre_Spinbox_X = self.BoxOffsetX.value()
+        self.F_Abs_X_Coord = self.F_Orig_X_Coord + self.init_offset[0] + self.BoxOffsetX.value()
+        self.EditAbsCoordinateFloatX.setText(str(self.F_Abs_X_Coord))
+        self.updateFloatImg()
+        # if self.F_Pre_Spinbox_X > self.BoxOffsetX.value():
+        #     self.F_Adj_X_Coord = self.F_Orig_X_Coord + self.BoxOffsetX.singleStep()
+        # elif self.F_Pre_Spinbox_X < self.BoxOffsetX.value():
+        #     self.F_Adj_X_Coord = self.F_Orig_X_Coord - self.BoxOffsetX.singleStep()
+        # self.EditAbsCoordinateFloatX.setText(str(self.F_Adj_X_Coord))
+        # self.F_Pre_Spinbox_X = self.BoxOffsetX.value()
+
+    def OffsetY_Change(self):
+        # self.F_Pre_Spinbox_Y = self.BoxOffsetY.value()
+        self.F_Abs_Y_Coord = self.F_Orig_Y_Coord + self.init_offset[1] + self.BoxOffsetY.value()
+        self.EditAbsCoordinateFloatY.setText(str(self.F_Abs_Y_Coord))
+        self.updateFloatImg()
+        # self.updateFloatImg()
+        # if self.F_Pre_Spinbox_Y > self.BoxOffsetY.value():
+        #     self.F_Adj_Y_Coord = self.F_Orig_Y_Coord + self.BoxOffsetY.singleStep()
+        # elif self.F_Pre_Spinbox_Y < self.BoxOffsetY.value():
+        #     self.F_Adj_Y_Coord = self.F_Orig_Y_Coord - self.BoxOffsetY.singleStep()
+        # self.EditAbsCoordinateFloatY.setText(str(self.F_Adj_Y_Coord))
+        # self.F_Pre_Spinbox_Y = self.BoxOffsetY.value()
 
     # def updateFloatImg_old(self):
     #     x = int(self.EditAbsCoordinateFloatX.text())
@@ -241,19 +255,26 @@ class ImgRegistration(QWidget):
     #     self.FloatImageLabel.setPixmap(self.FloatPixmap)
 
     def updateFloatImg(self):
-        center_X = int(self.EditAbsCoordinateFloatX.text()) + int(self.FloatPixmap.size().width() / 2)
-        center_Y = int(self.EditAbsCoordinateFloatY.text()) + int(self.FloatPixmap.size().height() / 2)
-        temp_org_X = int(center_X - 1.414 * self.FloatPixmap.size().width() / 2)
-        temp_org_Y = int(center_Y - 1.414 * self.FloatPixmap.size().height() / 2)
-        Img_temp = self.sd_float.read_region((temp_org_X, temp_org_Y), 0, (
-        int(1.414 * self.FloatPixmap.size().width()), int(1.414 * self.FloatPixmap.size().height())))
-        Img_temp1 = np.array(Img_temp.rotate(self.F_Angle))
-        # Img_temp1 = np.array(Img_temp.rotate(math.degrees(self.F_Angle)))  # if Angle is radians
-        index_start_x = int(0.414 * self.FloatPixmap.size().width() / 2)
-        index_start_y = int(0.414 * self.FloatPixmap.size().height() / 2)
-        Img_rot = Img_temp1[index_start_x:index_start_x + self.FloatPixmap.size().width(),
-                  index_start_y:index_start_y + self.FloatPixmap.size().height(), :]
-        pixmap_temp = ImageQt(Image.fromarray(Img_rot))
+        if self.F_Angle == 0:
+            rel_x = self.F_Abs_X_Coord
+            rel_y = self.F_Abs_Y_Coord
+            Img_temp = self.sd_float.read_region((rel_x, rel_y), 0, (self.ImgPatchSize, self.ImgPatchSize))
+            Img_temp = np.array(Img_temp)
+            pixmap_temp = ImageQt(Image.fromarray(Img_temp))
+        else:
+            center_X = int(self.EditAbsCoordinateFloatX.text()) + int(self.FloatPixmap.size().width() / 2)
+            center_Y = int(self.EditAbsCoordinateFloatY.text()) + int(self.FloatPixmap.size().height() / 2)
+            temp_org_X = int(center_X - 1.414 * self.FloatPixmap.size().width() / 2)
+            temp_org_Y = int(center_Y - 1.414 * self.FloatPixmap.size().height() / 2)
+            Img_temp = self.sd_float.read_region((temp_org_X, temp_org_Y), 0, (
+                int(1.414 * self.FloatPixmap.size().width()), int(1.414 * self.FloatPixmap.size().height())))
+            Img_temp1 = np.array(Img_temp.rotate(self.F_Angle))
+            # Img_temp1 = np.array(Img_temp.rotate(math.degrees(self.F_Angle)))  # if Angle is radians
+            index_start_x = int(0.414 * self.FloatPixmap.size().width() / 2)
+            index_start_y = int(0.414 * self.FloatPixmap.size().height() / 2)
+            Img_rot = Img_temp1[index_start_x:index_start_x + self.FloatPixmap.size().width(),
+                      index_start_y:index_start_y + self.FloatPixmap.size().height(), :]
+            pixmap_temp = ImageQt(Image.fromarray(Img_rot))
         self.FloatImageLabel.setPixmap(QPixmap.fromImage(pixmap_temp))
         self.FloatPixmap = QPixmap.fromImage(pixmap_temp)
 
@@ -280,9 +301,9 @@ class ImgRegistration(QWidget):
             f_pos = self.FloatImageLabel.pos()
             f_size = self.FloatImageLabel.size()
             # Mouse moving in Template image
-            if (t_pos.x() < x < (t_pos.x()+t_size.width())) & (t_pos.y() < y < (t_pos.y()+t_size.height())):
-                rel_pos_x = x-t_pos.x()-1
-                rel_pos_y = y-t_pos.y()-1
+            if (t_pos.x() < x < (t_pos.x() + t_size.width())) & (t_pos.y() < y < (t_pos.y() + t_size.height())):
+                rel_pos_x = x - t_pos.x() - 1
+                rel_pos_y = y - t_pos.y() - 1
                 self.CoordinateTemplate.setText('Mouse coords: ( %d : %d )' % (rel_pos_x, rel_pos_y))
                 self.CoordinateFloat.setText('Mouse coords: ( %d : %d )' % (rel_pos_x, rel_pos_y))
                 painter = QPainter(self)
@@ -309,9 +330,9 @@ class ImgRegistration(QWidget):
                 painter.end()
                 self.FloatImageLabel.setPixmap(temp_pixmap_f)
             # Mouse moving in Floating image
-            if (f_pos.x() < x < (f_pos.x()+f_size.width())) & (f_pos.y() < y < (f_pos.y()+f_size.height())):
-                rel_pos_x = x - f_pos.x()-1
-                rel_pos_y = y - f_pos.y()-1
+            if (f_pos.x() < x < (f_pos.x() + f_size.width())) & (f_pos.y() < y < (f_pos.y() + f_size.height())):
+                rel_pos_x = x - f_pos.x() - 1
+                rel_pos_y = y - f_pos.y() - 1
                 self.CoordinateTemplate.setText('Mouse coords: ( %d : %d )' % (rel_pos_x, rel_pos_y))
                 self.CoordinateFloat.setText('Mouse coords: ( %d : %d )' % (rel_pos_x, rel_pos_y))
 
@@ -348,7 +369,8 @@ class ImgRegistration(QWidget):
         if filename_fix:
             self.EditImgNameTemplate.setText(filename_fix)
             self.sd_fix = openslide.OpenSlide(filename_fix)
-            Img_fix_col = self.sd_fix.read_region((self.T_Orig_X_Coord, self.T_Orig_Y_Coord), 0, (self.ImgPatchSize, self.ImgPatchSize))
+            Img_fix_col = self.sd_fix.read_region((self.T_Orig_X_Coord, self.T_Orig_Y_Coord), 0,
+                                                  (self.ImgPatchSize, self.ImgPatchSize))
             pixmap_fix = ImageQt(Img_fix_col)
             self.TemplatePixmap = QPixmap.fromImage(pixmap_fix)
             self.TemplateImageLabel.setPixmap(self.TemplatePixmap)
@@ -370,12 +392,13 @@ class ImgRegistration(QWidget):
         if filename_float:
             self.EditImgNameFloating.setText(filename_float)
             self.sd_float = openslide.OpenSlide(filename_float)
-            Img_float_col = self.sd_float.read_region((self.F_Orig_X_Coord, self.F_Orig_Y_Coord), 0, (self.ImgPatchSize, self.ImgPatchSize))
+            Img_float_col = self.sd_float.read_region((self.F_Abs_X_Coord, self.F_Abs_Y_Coord), 0,
+                                                      (self.ImgPatchSize, self.ImgPatchSize))
             pixmap_float = ImageQt(Img_float_col)
             self.FloatPixmap = QPixmap.fromImage(pixmap_float)
             self.FloatImageLabel.setPixmap(self.FloatPixmap)
-            self.EditAbsCoordinateFloatX.setText(str(self.F_Orig_X_Coord))
-            self.EditAbsCoordinateFloatY.setText(str(self.F_Orig_Y_Coord))
+            self.EditAbsCoordinateFloatX.setText(str(self.F_Abs_X_Coord))
+            self.EditAbsCoordinateFloatY.setText(str(self.F_Abs_Y_Coord))
             self.Float_Load = True
             if self.Template_Load:
                 self.BoxOffsetX.setEnabled(True)
@@ -394,6 +417,7 @@ class ImgRegistration(QWidget):
         fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", default_dir,
                                                   "All Files (*)", options=options)
         return fileName
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
