@@ -194,65 +194,41 @@ class ImgRegistration(QWidget):
         if self.Template_Load:
             self.T_Orig_X_Coord = int(self.EditAbsCoordinateTemplateX.text())
             self.updateTemplateImg()
-            # self.ROIFloatX_Change()
-        print("" + str(self.T_Orig_X_Coord))
+            self.ROIFloatX_Change()
+        print("Change Template X:" + str(self.T_Orig_X_Coord))
 
     def ROITemplateY_Change(self):
         if self.Template_Load:
             self.T_Orig_Y_Coord = int(self.EditAbsCoordinateTemplateY.text())
             self.updateTemplateImg()
-            # self.ROIFloatY_Change()
-        print("" + str(self.T_Orig_Y_Coord))
+            self.ROIFloatY_Change()
+        print("Change Template Y:" + str(self.T_Orig_Y_Coord))
 
-    # def ROIFloatX_Change(self):
-    #     if self.Float_Load:
-    #         self.F_Orig_X_Coord = int(self.EditAbsCoordinateTemplateX.text())
-    #         self.F_Abs_X_Coord = self.F_Orig_X_Coord+self.init_offset[0]+self.F_Pre_Spinbox_X
-    #         self.EditAbsCoordinateFloatX.setText(str(self.F_Abs_X_Coord))
-    #         self.updateFloatImg()
-    #     print("" + str(self.F_Orig_X_Coord))
-    #
-    # def ROIFloatY_Change(self):
-    #     if self.Float_Load:
-    #         self.F_Orig_Y_Coord = int(self.EditAbsCoordinateTemplateY.text())
-    #         self.F_Abs_Y_Coord = self.F_Orig_Y_Coord+self.init_offset[1]+self.F_Pre_Spinbox_Y
-    #         self.EditAbsCoordinateFloatY.setText(str(self.F_Abs_Y_Coord))
-    #         self.updateFloatImg()
-    #     print("" + str(self.F_Orig_Y_Coord))
+    def ROIFloatX_Change(self):
+        if self.Float_Load:
+            self.F_Orig_X_Coord = int(self.EditAbsCoordinateTemplateX.text())
+            self.F_Abs_X_Coord = self.F_Orig_X_Coord+self.init_offset[0]+self.F_Pre_Spinbox_X
+            self.EditAbsCoordinateFloatX.setText(str(self.F_Abs_X_Coord))
+            self.updateFloatImg()
+        print("Change Float X:" + str(self.F_Orig_X_Coord))
+
+    def ROIFloatY_Change(self):
+        if self.Float_Load:
+            self.F_Orig_Y_Coord = int(self.EditAbsCoordinateTemplateY.text())
+            self.F_Abs_Y_Coord = self.F_Orig_Y_Coord+self.init_offset[1]+self.F_Pre_Spinbox_Y
+            self.EditAbsCoordinateFloatY.setText(str(self.F_Abs_Y_Coord))
+            self.updateFloatImg()
+        print("Change Float Y:" + str(self.F_Orig_Y_Coord))
 
     def OffsetX_Change(self):
-        # value_increase = self.BoxOffsetX.value()-self.F_Pre_Spinbox_X
-        # self.F_Pre_Spinbox_X = self.BoxOffsetX.value()
         self.F_Abs_X_Coord = self.F_Orig_X_Coord + self.init_offset[0] + self.BoxOffsetX.value()
         self.EditAbsCoordinateFloatX.setText(str(self.F_Abs_X_Coord))
         self.updateFloatImg()
-        # if self.F_Pre_Spinbox_X > self.BoxOffsetX.value():
-        #     self.F_Adj_X_Coord = self.F_Orig_X_Coord + self.BoxOffsetX.singleStep()
-        # elif self.F_Pre_Spinbox_X < self.BoxOffsetX.value():
-        #     self.F_Adj_X_Coord = self.F_Orig_X_Coord - self.BoxOffsetX.singleStep()
-        # self.EditAbsCoordinateFloatX.setText(str(self.F_Adj_X_Coord))
-        # self.F_Pre_Spinbox_X = self.BoxOffsetX.value()
 
     def OffsetY_Change(self):
-        # self.F_Pre_Spinbox_Y = self.BoxOffsetY.value()
         self.F_Abs_Y_Coord = self.F_Orig_Y_Coord + self.init_offset[1] + self.BoxOffsetY.value()
         self.EditAbsCoordinateFloatY.setText(str(self.F_Abs_Y_Coord))
         self.updateFloatImg()
-        # self.updateFloatImg()
-        # if self.F_Pre_Spinbox_Y > self.BoxOffsetY.value():
-        #     self.F_Adj_Y_Coord = self.F_Orig_Y_Coord + self.BoxOffsetY.singleStep()
-        # elif self.F_Pre_Spinbox_Y < self.BoxOffsetY.value():
-        #     self.F_Adj_Y_Coord = self.F_Orig_Y_Coord - self.BoxOffsetY.singleStep()
-        # self.EditAbsCoordinateFloatY.setText(str(self.F_Adj_Y_Coord))
-        # self.F_Pre_Spinbox_Y = self.BoxOffsetY.value()
-
-    # def updateFloatImg_old(self):
-    #     x = int(self.EditAbsCoordinateFloatX.text())
-    #     y = int(self.EditAbsCoordinateFloatY.text())
-    #     Img_float_col = self.sd_float.read_region((x, y), 0, (self.ImgPatchSize, self.ImgPatchSize))
-    #     pixmap_float = ImageQt(Img_float_col)
-    #     self.FloatPixmap = QPixmap.fromImage(pixmap_float)
-    #     self.FloatImageLabel.setPixmap(self.FloatPixmap)
 
     def updateFloatImg(self):
         if self.F_Angle == 0:
@@ -384,8 +360,8 @@ class ImgRegistration(QWidget):
                 self.EditImgPatchSize.setEnabled(True)
                 self.EditAbsCoordinateTemplateX.setEnabled(True)
                 self.EditAbsCoordinateTemplateY.setEnabled(True)
-                self.EditAbsCoordinateFloatX.setEnabled(True)
-                self.EditAbsCoordinateFloatY.setEnabled(True)
+                # self.EditAbsCoordinateFloatX.setEnabled(True)
+                # self.EditAbsCoordinateFloatY.setEnabled(True)
 
     def openFloating(self):
         filename_float = self.openFileNameDialog()
@@ -407,8 +383,8 @@ class ImgRegistration(QWidget):
                 self.EditImgPatchSize.setEnabled(True)
                 self.EditAbsCoordinateTemplateX.setEnabled(True)
                 self.EditAbsCoordinateTemplateY.setEnabled(True)
-                self.EditAbsCoordinateFloatX.setEnabled(True)
-                self.EditAbsCoordinateFloatY.setEnabled(True)
+                # self.EditAbsCoordinateFloatX.setEnabled(True)
+                # self.EditAbsCoordinateFloatY.setEnabled(True)
 
     def openFileNameDialog(self):
         options = QFileDialog.Options()
