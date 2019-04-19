@@ -2,6 +2,8 @@ import sys, os
 import openslide
 import math
 import numpy as np
+import imreg_dft as ird
+import scipy as sp
 from PIL import Image
 from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import QDir, Qt, pyqtSlot, QCoreApplication, QMetaObject, QObject, QPoint, QEvent
@@ -21,8 +23,8 @@ class ImgRegistration(QWidget):
         self.EditImgNameTemplate = QLineEdit()  # edit line to show template image name
         self.EditImgNameFloating = QLineEdit()  # edit line to show floating image name
         self.ImgSizeLabel = QLabel("Patch Size:")
-        self.EditImgPatchSize = QLineEdit("500")  # editbox to show image patch size
-        self.ImgPatchSize_display = QLabel("*500")
+        self.EditImgPatchSize = QLineEdit("800")  # editbox to show image patch size
+        self.ImgPatchSize_display = QLabel("*800")
         self.AutoRegButton = QPushButton("AutoReg")  # automatically co-registrate two images
         self.HelpButton = QPushButton("Help")
         self.ImgOffsetLabel_x = QLabel("Offset_X:")
@@ -96,35 +98,35 @@ class ImgRegistration(QWidget):
         self.T_Orig_Y_Coord = 21000
         self.F_Orig_X_Coord = 21000  # 21249 + 42
         self.F_Orig_Y_Coord = 21000
-        self.init_offset = [291, 54]
+        self.init_offset = [0, 0]
         self.F_Angle = 0
 
-        self.F_Pre_Spinbox_X = 0
-        self.F_Pre_Spinbox_Y = 0
-        self.F_Abs_X_Coord = self.F_Orig_X_Coord + self.init_offset[0] + self.F_Pre_Spinbox_X
-        self.F_Abs_Y_Coord = self.F_Orig_Y_Coord + self.init_offset[1] + self.F_Pre_Spinbox_Y
+        self.F_Spinbox_X = 0
+        self.F_Spinbox_Y = 0
+        self.F_Abs_X_Coord = self.F_Orig_X_Coord + self.init_offset[0] + self.F_Spinbox_X
+        self.F_Abs_Y_Coord = self.F_Orig_Y_Coord + self.init_offset[1] + self.F_Spinbox_Y
 
         self.sd_fix = None
         self.sd_float = None
 
-        pixmap_t = QPixmap(500, 500)
+        pixmap_t = QPixmap(800, 800)
         pixmap_t.fill(Qt.white)
-        pixmap_f = QPixmap(500, 500)
+        pixmap_f = QPixmap(800, 800)
         pixmap_f.fill(Qt.white)
         self.TemplatePixmap = pixmap_t
         self.FloatPixmap = pixmap_f
         self.Template_Load = False
         self.Float_Load = False
-        self.ImgPatchSize = 500
+        self.ImgPatchSize = 800
         self.initUI()
 
     def initUI(self):
         self.setWindowTitle("Image Registration")
         self.setGeometry(self.left + 30, self.top + 30, self.width, self.height)
         self.EditImgPatchSize.setFixedWidth(50)
-        pixmap_it = QPixmap(500, 500)
+        pixmap_it = QPixmap(800, 800)
         pixmap_it.fill(Qt.white)
-        pixmap_if = QPixmap(500, 500)
+        pixmap_if = QPixmap(800, 800)
         pixmap_if.fill(Qt.white)
         self.TemplateImageLabel.setPixmap(pixmap_it)
         self.TemplateImageLabel.setCursor(QCursor(Qt.CrossCursor))
@@ -174,7 +176,38 @@ class ImgRegistration(QWidget):
         Visit my Github(https://github.com/smujiang) for more information", QMessageBox.Ok)
 
     def AutoReg(self):
-        QMessageBox.information(self, 'Message', "Pending", QMessageBox.Ok)
+        # QMessageBox.information(self, 'Message', "Pending", QMessageBox.Ok)
+        WSI_Width, WSI_Height = self.sd_fix.dimensions
+        thumb_size_x = round(WSI_Width / 100)
+        thumb_size_y = round(WSI_Height / 100)
+        thumbnail_fixed = self.sd_fix.get_thumbnail([thumb_size_x, thumb_size_y])
+        thumbnail_fixed = thumbnail_fixed.convert('L')  # get grayscale image
+        WSI_Width, WSI_Height = self.sd_float.dimensions
+        thumb_size_x = round(WSI_Width / 100)
+        thumb_size_y = round(WSI_Height / 100)
+        thumbnail_float = self.sd_float.get_thumbnail([thumb_size_x, thumb_size_y])
+        thumbnail_float = thumbnail_float.convert('L')  # get grayscale image
+        img_w = min(thumbnail_fixed.width, thumbnail_float.width)
+        img_h = min(thumbnail_fixed.height, thumbnail_float.height)
+        img_size = min(img_w, img_h)
+        fixed_array = np.array(thumbnail_fixed)
+        float_array = np.array(thumbnail_float)
+        fixed_img = Image.fromarray(fixed_array[0:img_size, 0:img_size])
+        float_img = Image.fromarray(float_array[0:img_size, 0:img_size])
+        Img_fix = sp.misc.fromimage(fixed_img, True)  # flatten is True, means we convert images into graylevel images.
+        Img_float = sp.misc.fromimage(float_img, True)
+        con_s = dict(angle=[0, 0], scale=[1, 1])
+        sim = ird.similarity(Img_fix, Img_float, constraints=con_s)
+        tvec = sim["tvec"].round(4)
+        offset = [-tvec[1], -tvec[0]]
+        raw_offset = [offset[0] * 100, offset[1] * 100]
+        self.BoxOffsetX.setValue(raw_offset[0])
+        self.BoxOffsetY.setValue(raw_offset[1])
+        self.F_Abs_X_Coord = self.F_Orig_X_Coord + self.init_offset[0] + self.BoxOffsetX.value()
+        self.F_Abs_Y_Coord = self.F_Orig_Y_Coord + self.init_offset[1] + self.BoxOffsetY.value()
+        print(raw_offset)
+        self.updateFloatImg()
+
 
     def ImgPatchSize_Change(self):
         x = int(self.EditImgPatchSize.text())
@@ -207,7 +240,7 @@ class ImgRegistration(QWidget):
     def ROIFloatX_Change(self):
         if self.Float_Load:
             self.F_Orig_X_Coord = int(self.EditAbsCoordinateTemplateX.text())
-            self.F_Abs_X_Coord = self.F_Orig_X_Coord+self.init_offset[0]+self.F_Pre_Spinbox_X
+            self.F_Abs_X_Coord = self.F_Orig_X_Coord+self.init_offset[0]+self.F_Spinbox_X
             self.EditAbsCoordinateFloatX.setText(str(self.F_Abs_X_Coord))
             self.updateFloatImg()
         print("Change Float X:" + str(self.F_Orig_X_Coord))
@@ -215,7 +248,7 @@ class ImgRegistration(QWidget):
     def ROIFloatY_Change(self):
         if self.Float_Load:
             self.F_Orig_Y_Coord = int(self.EditAbsCoordinateTemplateY.text())
-            self.F_Abs_Y_Coord = self.F_Orig_Y_Coord+self.init_offset[1]+self.F_Pre_Spinbox_Y
+            self.F_Abs_Y_Coord = self.F_Orig_Y_Coord+self.init_offset[1]+self.F_Spinbox_Y
             self.EditAbsCoordinateFloatY.setText(str(self.F_Abs_Y_Coord))
             self.updateFloatImg()
         print("Change Float Y:" + str(self.F_Orig_Y_Coord))
