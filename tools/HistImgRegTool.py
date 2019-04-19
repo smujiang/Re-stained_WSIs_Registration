@@ -43,6 +43,9 @@ class ImgRegistration(QWidget):
         self.EditAbsCoordinateFloatY = QLineEdit()
         self.CoordinateTemplate = QLabel()
         self.CoordinateFloat = QLabel()
+        self.SaveOffsetCSV_label = QLabel("SaveOffset")
+        self.EditSaveOffsetCSV = QLineEdit()
+        self.Save2CSVButton = QPushButton("Save2CSV")
 
         vbox_main = QVBoxLayout()
         row1_hbox = QHBoxLayout()
@@ -57,6 +60,9 @@ class ImgRegistration(QWidget):
         row2_hbox.addWidget(self.ImgSizeLabel)
         row2_hbox.addWidget(self.EditImgPatchSize)
         row2_hbox.addWidget(self.ImgPatchSize_display)
+        row2_hbox.addWidget(self.SaveOffsetCSV_label)
+        row2_hbox.addWidget(self.EditSaveOffsetCSV)
+        row2_hbox.addWidget(self.Save2CSVButton)
         row2_hbox.addStretch()
         row2_hbox.addWidget(self.ImgOffsetLabel_x)
         row2_hbox.addWidget(self.BoxOffsetX)
@@ -156,8 +162,13 @@ class ImgRegistration(QWidget):
         self.BoxAngle.setRange(-90, 90)  # rotate as degree
         self.BoxAngle.setSingleStep(1)
         self.AutoRegButton.setStyleSheet("background-color: green;")
+        self.EditSaveOffsetCSV.setText("H:\\HE_IHC_Stains\\log\\offsets.csv")
+        self.Save2CSVButton.clicked.connect(self.Save2CSV)
+        self.Save2CSVButton.setEnabled(False)
+        self.EditSaveOffsetCSV.setEnabled(False)
         # self.EditAbsCoordinateTemplateX.editingFinished.connect(self.ROITemplateX_Change)
         # self.EditAbsCoordinateTemplateY.editingFinished.connect(self.ROITemplateY_Change)
+
         self.EditAbsCoordinateTemplateX.textChanged.connect(self.ROITemplateX_Change)
         self.EditAbsCoordinateTemplateY.textChanged.connect(self.ROITemplateY_Change)
 
@@ -372,10 +383,19 @@ class ImgRegistration(QWidget):
         else:
             QMessageBox.warning(self, 'Message', "You must open both images first.", QMessageBox.Ok)
 
-    @pyqtSlot()  # if click on the next button, jump to the next index of image
+    def Save2CSV(self):
+        fp = open(self.EditSaveOffsetCSV.text(),"a")
+        t_f = os.path.split(self.EditImgNameTemplate.text())[1]
+        f_f = os.path.split(self.EditImgNameFloating.text())[1]
+        wrt_str = ",".join([t_f,f_f, self.BoxOffsetX.text(), self.BoxOffsetY.text()])
+        fp.write(wrt_str+"\n")
+        fp.close()
+
+    #@pyqtSlot()  # if click on the next button, jump to the next index of image
     def openTemplate(self):
-        filename_fix = self.openFileNameDialog()
+        filename_fix = self.openWSIDialog("Fixed Image")
         if filename_fix:
+            print("Read file %s" % filename_fix)
             self.EditImgNameTemplate.setText(filename_fix)
             self.sd_fix = openslide.OpenSlide(filename_fix)
             Img_fix_col = self.sd_fix.read_region((self.T_Orig_X_Coord, self.T_Orig_Y_Coord), 0,
@@ -393,12 +413,15 @@ class ImgRegistration(QWidget):
                 self.EditImgPatchSize.setEnabled(True)
                 self.EditAbsCoordinateTemplateX.setEnabled(True)
                 self.EditAbsCoordinateTemplateY.setEnabled(True)
+                self.EditSaveOffsetCSV.setEnabled(True)
+                self.Save2CSVButton.setEnabled(True)
                 # self.EditAbsCoordinateFloatX.setEnabled(True)
                 # self.EditAbsCoordinateFloatY.setEnabled(True)
 
     def openFloating(self):
-        filename_float = self.openFileNameDialog()
+        filename_float = self.openWSIDialog("Float Image")
         if filename_float:
+            print("Read file %s" % filename_float)
             self.EditImgNameFloating.setText(filename_float)
             self.sd_float = openslide.OpenSlide(filename_float)
             Img_float_col = self.sd_float.read_region((self.F_Abs_X_Coord, self.F_Abs_Y_Coord), 0,
@@ -416,16 +439,28 @@ class ImgRegistration(QWidget):
                 self.EditImgPatchSize.setEnabled(True)
                 self.EditAbsCoordinateTemplateX.setEnabled(True)
                 self.EditAbsCoordinateTemplateY.setEnabled(True)
+                self.EditSaveOffsetCSV.setEnabled(True)
+                self.Save2CSVButton.setEnabled(True)
                 # self.EditAbsCoordinateFloatX.setEnabled(True)
                 # self.EditAbsCoordinateFloatY.setEnabled(True)
 
-    def openFileNameDialog(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        default_dir = "H:\\HE_IHC_Stains"
-        fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", default_dir,
-                                                  "All Files (*)", options=options)
-        return fileName
+    def openWSIDialog(self, ImgType):
+        # options = QFileDialog.Options()
+        # print("1")
+        # options |= QFileDialog.DontUseNativeDialog
+        # default_dir = "H:\\HE_IHC_Stains"
+        # print("3")
+        # fileName, _ = QFileDialog.getOpenFileName(self, "Select "+ImgType, default_dir, "All Files (*)", options=options)
+
+        dialog = QFileDialog(self, "Select "+ImgType)
+        dialog.setFileMode(QFileDialog.AnyFile)
+        dialog.setNameFilter(str("Images (*.svs)"))
+        dialog.setViewMode(QFileDialog.Detail)
+        if dialog.exec_():
+            fileNames = dialog.selectedFiles()
+            return fileNames[0]
+        else:
+            return None
 
 
 if __name__ == '__main__':
