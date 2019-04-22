@@ -9,15 +9,17 @@ from collections import Counter
 from sklearn import linear_model
 import random
 import os
-from PIL import Image
+from PIL import Image, ImageDraw
+from scipy import ndimage
 from scipy.stats import gaussian_kde
 from skimage.color import rgb2hsv
 import time
+import logging
 from panorama import Stitcher
-from getWSICases import get_co_registration_pairs
+
 
 layer_patch_num = [100, 64, 16, 4]  # patch numbers per image level
-patch_size = [800, 400, 300, 200]
+patch_size = [1200, 800, 300, 200]
 
 t0 = time.time()
 
@@ -45,7 +47,7 @@ def histogram(iterable, low, high, bins):
     return [dist[b] for b in range(bins)]
 
 
-def raw_reg(fixed_img, float_img, method="FFT"):
+def raw_reg(fixed_img, float_img, init_offset, down_rate, lv, method="FFT"):
     if type(fixed_img) == Image.Image:
         Img_fix = sp.misc.fromimage(fixed_img, True)  # flatten is True, means we convert images into graylevel images.
         Img_float = sp.misc.fromimage(float_img, True)
@@ -127,6 +129,7 @@ def raw_reg(fixed_img, float_img, method="FFT"):
         score = 1 / (np.mean(np.std([offsets[i] for i in idx_s_list], 0)) + 0.00000001)
     else:
         return [0, 0], 0
+    offset = [offset[0] + init_offset[0]/down_rate[lv], offset[1] + init_offset[1]/down_rate[lv]]
     return offset, score
 
 
@@ -149,7 +152,8 @@ def get_initial_pos(WSI_fixed, WSI_float):
     float_array = np.array(thumbnail_float)
     fixed_img = Image.fromarray(fixed_array[0:img_size,0:img_size])
     float_img = Image.fromarray(float_array[0:img_size,0:img_size])
-    init_offset, _ = raw_reg(fixed_img, float_img, method="FFT")
+    init_offset, _ = raw_reg(fixed_img, float_img, [0, 0],[1,1],0, method="FFT")
+    print("Thumbnail offset: [%f, %f]" % (init_offset[0], init_offset[1]))
     init_offset = [init_offset[0]*100, init_offset[1]*100]
     return init_offset
 
@@ -157,40 +161,80 @@ def get_initial_pos(WSI_fixed, WSI_float):
 def getROIs(WSI_Img, init_offset, level=0):
     locations = []
     WSI_Width, WSI_Height = WSI_Img.dimensions
-    thumb_size_x = round(WSI_Width / 100)
-    thumb_size_y = round(WSI_Height / 100)
+    thumb_size_x = int(WSI_Width / 100)
+    thumb_size_y = int(WSI_Height / 100)
     thumbnail = WSI_Img.get_thumbnail([thumb_size_x, thumb_size_y])
     rgb_image_array = np.array(thumbnail)
     hsv_img = rgb2hsv(rgb_image_array)
     value_img = hsv_img[:, :, 2]
     binary_img = value_img < 0.8  # brightness higher than 0.8
+    binary_img = ndimage.binary_erosion(binary_img, structure=np.ones((5,5)))
     cnt = 0
     while cnt < layer_patch_num[level]:
-        x = random.randint(int(patch_size[3]/100), int(thumb_size_x/(patch_size[3]/100)))
-        y = random.randint(int(patch_size[3]/100), int(thumb_size_y/(patch_size[3]/100)))
-        if binary_img[y][x]:
-            loc_x = int((x * 100) + init_offset[1])
-            loc_y = int((y * 100) + init_offset[0])
+        x = random.randint(2, thumb_size_x - 2)
+        y = random.randint(2, thumb_size_y - 2)
+        if binary_img[y, x]:
+            loc_x = int((x * 100))
+            loc_y = int((y * 100))
             locations.append([loc_y, loc_x])
             cnt += 1
     return locations
 
-def get_img_patches(WSI_Img, locations, patch_size, level=0):
+
+def change_offset(HE_offsets, init_offset):
+    IHC_offsets = []
+    for HEoff in HE_offsets:
+        IHC_offsets.append([int(HEoff[0]-init_offset[1]), int(HEoff[1]-init_offset[0])])
+    return IHC_offsets
+
+
+def getROIs_debug(WSI_Img, init_offset, debug_out_file, level=0):
+    colors = ["black", "red", "green", "yellow"]
+    locations = []
+    WSI_Width, WSI_Height = WSI_Img.dimensions
+    thumb_size_x = int(WSI_Width / 100)
+    thumb_size_y = int(WSI_Height / 100)
+    thumbnail = WSI_Img.get_thumbnail([thumb_size_x, thumb_size_y])
+    rgb_image_array = np.array(thumbnail)
+    hsv_img = rgb2hsv(rgb_image_array)
+    value_img = hsv_img[:, :, 2]
+    binary_img = value_img < 0.8  # brightness higher than 0.8
+    draw = ImageDraw.Draw(thumbnail)
+    cnt = 0
+    while cnt < layer_patch_num[level]:
+        x = random.randint(0, thumb_size_x-1)
+        y = random.randint(0, thumb_size_y-1)
+        #draw.line((x - 15, y, x + 15, y), fill="green", width=10)
+        if binary_img[y, x]:
+            draw.line((x - 8, y, x + 8, y), fill=colors[level], width=17)
+            loc_x = int((x * 100) - init_offset[0])
+            loc_y = int((y * 100) - init_offset[1])
+            locations.append([loc_y, loc_x])
+            cnt += 1
+    del draw
+    thumbnail.save(debug_out_file, "png")
+    return locations
+
+def get_img_patches(WSI_Img, locations, p_size, level=0, mod="IHC"):
     Imgs = []
+    cnt = 0
     for y,x in locations:
-        Img_patch = WSI_Img.read_region((y, x), level, (patch_size, patch_size))
+        Img_patch = WSI_Img.read_region((x, y), level, (p_size, p_size))
         Img_patch = Img_patch.convert("RGB")
-        # path_save = "H:\\HE_IHC_Stains\\Temp"
-        # Img_patch.save(os.path.join(path_save, str(x)+"_"+str(y)+".jpg"))
+        #print("Location: %d, %d; Patch size: %d" % (y, x, p_size))
+        # if level == 2:
+        #     path_save = "H:\\HE_IHC_Stains\\patches"
+        #     Img_patch.save(os.path.join(path_save, mod+"_"+str(cnt)+"_"+str(x)+"_"+str(y)+"_lv"+str(level)+".jpg"))
         Imgs.append(Img_patch)
+        cnt += 1
     return Imgs
 
 
-def raw_reg_batch(fixed_imgs, float_imgs, method="m"):
+def raw_reg_batch(fixed_imgs, float_imgs, init_offset, down_rate, level=0, method="m"):
     offsets = []
     scores = []
     for idx in range(len(fixed_imgs)):
-        offset, score = raw_reg(fixed_imgs[idx], float_imgs[idx], method=method)
+        offset, score = raw_reg(fixed_imgs[idx], float_imgs[idx], init_offset, down_rate, level, method=method)
         offsets.append(offset)
         scores.append(score)
     return offsets, scores
@@ -232,15 +276,19 @@ def norm(rvalue, newmin, newmax):
 # cv: confidence value
 # Thr: the confidence threshold (eg. 0.65)
 def getEstimation(X, Y, cv, Thr):
-    ncv = norm(cv, 0.0, 1.0)
-    idx = [n for n, i in enumerate(ncv) if i > Thr]
-    newX = X[idx]
-    newY = Y[idx]
-    avgX = np.mean(newX)
-    avgY = np.mean(newY)
-    stdX = np.std(newX)
-    stdY = np.std(newY)
-    return newX, newY, avgX, avgY, stdX, stdY
+    if (not len(X) == len(Y)) or (not len(X) == len(cv)):
+        print("X dim: %d, Y dim: %d, Score dim: %d" % (len(X), len(Y), len(cv)))
+        raise Exception("Offset and score dimension not match")
+    else:
+        ncv = norm(cv, 0.0, 1.0)
+        idx = [n for n, i in enumerate(ncv) if i > Thr]
+        newX = X[idx]
+        newY = Y[idx]
+        avgX = np.mean(newX)
+        avgY = np.mean(newY)
+        stdX = np.std(newX)
+        stdY = np.std(newY)
+        return newX, newY, avgX, avgY, stdX, stdY
 
 
 def HL_fit(offsets, scores,level_ratio):
@@ -253,10 +301,9 @@ def HL_fit(offsets, scores,level_ratio):
     k_s_w = regr_w.fit(x_np, y_np, sample_weight=w_np * 10)
     slop_s_w = k_s_w.coef_[0][0]
     # get final estimation
-    score_norm = norm(all_scores, 0, 1)
     key_layer_x = np.array(offsets[2])[:, 0]
     key_layer_y = np.array(offsets[2])[:, 1]
-    newX, newY, avgX, avgY, stdX, stdY = getEstimation(key_layer_x, key_layer_y, score_norm, 0.75)
+    newX, newY, avgX, avgY, stdX, stdY = getEstimation(key_layer_x, key_layer_y, scores[2], 0.65)
     est_x_lv0_k_a = avgX * level_ratio[1]
     est_y_lv0_k_b = est_x_lv0_k_a * slop_s_w
     est_y_lv0_k_a = avgY * level_ratio[1]
@@ -267,139 +314,178 @@ def HL_fit(offsets, scores,level_ratio):
     return refined_offsets
 
 
-RELEASE = True
-VERBOSE = False
+RELEASE = False
+VERBOSE = True
 DRAW_FIG = False
-
-data_dir = "\\\\mfad.mfroot.org\\researchmn\\DLMP-MACHINE-LEARNING\\Mitosis_Deep Learning"
-#WSI_pairs = get_co_registration_pairs(data_dir)
 
 
 ################################################
 # HE_Img_name = "H:\\HE_IHC_Stains\\Merkel-CC_CR16-1790-A2_HE-Cleaved-Caspase3.svs"
 # IHC_Img_name = "H:\\HE_IHC_Stains\\Merkel-CC_CR16-1790-A2_Cleaved-Caspase3.svs"
 
-HE_Img_name = "H:\\HE_IHC_Stains\\Merkel-CC_CR16-1790-A2_HE-PHH3.svs"
-IHC_Img_name = "H:\\HE_IHC_Stains\\Merkel-CC_CR16-1790-A2_PHH3.svs"
+# HE_Img_name = "H:\\HE_IHC_Stains\\Merkel-CC_CR16-1790-A2_HE-PHH3.svs"
+# IHC_Img_name = "H:\\HE_IHC_Stains\\Merkel-CC_CR16-1790-A2_PHH3.svs"
 
-HE_Img = openslide.open_slide(HE_Img_name)
-IHC_Img = openslide.open_slide(IHC_Img_name)
+def match_WSI(HE_Img_name, IHC_Img_name, save_to_txt):
+    HE_n = os.path.split(HE_Img_name)[1]
+    IHC_n = os.path.split(IHC_Img_name)[1]
+    print("Processing %s & %s" % (HE_n, IHC_n))
 
-print("Checking image information")
-# check image information
-if not validate_WSI_info(HE_Img, IHC_Img):
-    raise Exception("Float image and fixed image don't share some essential properties")
+    HE_Img = openslide.open_slide(HE_Img_name)
+    IHC_Img = openslide.open_slide(IHC_Img_name)
 
-# get initial position, just in case the initial offset is too large
-init_offset = get_initial_pos(HE_Img, IHC_Img)
+    print("Checking image information")
+    # check image information
+    if not validate_WSI_info(HE_Img, IHC_Img):
+        raise Exception("Float image and fixed image don't share some essential properties")
 
-if init_offset[0] > patch_size[0] or init_offset[1] > patch_size[0]:
-    print("offset too large, add init_offset")
-    # get ROI from WSI
-    locations_lv3 = getROIs(HE_Img, init_offset, level=3)
-    locations_lv2 = getROIs(HE_Img, init_offset, level=2)
-    locations_lv1 = getROIs(HE_Img, init_offset, level=1)
-    if VERBOSE:
-        locations_lv0 = getROIs(HE_Img, init_offset, level=0)
-else:
-    # get ROI from WSI
+    # get initial position, just in case the initial offset is too large
+    init_offset = get_initial_pos(HE_Img, IHC_Img)
+
     locations_lv3 = getROIs(HE_Img, [0,0], level=3)
     locations_lv2 = getROIs(HE_Img, [0,0], level=2)
     locations_lv1 = getROIs(HE_Img, [0,0], level=1)
     if VERBOSE:
-        locations_lv0 = getROIs(HE_Img, [0,0],level=0)
+        locations_lv0 = getROIs(HE_Img, [0,0], level=0)
 
-print("Spend %s s" % str(time.time()-t0))
+    if patch_size[0] < abs(init_offset[0]) or patch_size[0] < abs(init_offset[1]):
+        logging.warning("Patch size smaller than offset")
+        locations_lv3_IHC = change_offset(locations_lv3, init_offset)
+        locations_lv2_IHC = change_offset(locations_lv2, init_offset)
+        locations_lv1_IHC = change_offset(locations_lv1, init_offset)
+        if VERBOSE:
+            locations_lv0_IHC = change_offset(locations_lv0, init_offset)
+    else:
+        init_offset = [0, 0]
+        locations_lv3_IHC = locations_lv3
+        locations_lv2_IHC = locations_lv2
+        locations_lv1_IHC = locations_lv1
+        if VERBOSE:
+            locations_lv0_IHC = locations_lv0
+    # if not RELEASE:
+    #     out_file = os.path.join("H://HE_IHC_Stains/thumbnails_rois", HE_n[:-4]+"lv3.png")
+    #     locations_lv3 = getROIs_debug(HE_Img, init_offset, out_file, level=3)
+    #     out_file = os.path.join("H://HE_IHC_Stains/thumbnails_rois", HE_n[:-4] + "lv2.png")
+    #     locations_lv2 = getROIs_debug(HE_Img, init_offset, out_file, level=2)
+    #     out_file = os.path.join("H://HE_IHC_Stains/thumbnails_rois", HE_n[:-4] + "lv1.png")
+    #     locations_lv1 = getROIs_debug(HE_Img, init_offset, out_file, level=1)
+    #     if VERBOSE:
+    #         locations_lv0 = getROIs_debug(HE_Img, init_offset, out_file, level=0)
 
-print("Getting image patches from WSI")
-#######################################################
-# extract patches from image levels
-HE_Imgs_lv3 = get_img_patches(HE_Img, locations_lv3, patch_size[3], level=3)
-HE_Imgs_lv2 = get_img_patches(HE_Img, locations_lv2, patch_size[2], level=2)
-HE_Imgs_lv1 = get_img_patches(HE_Img, locations_lv1, patch_size[1], level=1)
-if VERBOSE:
-    HE_Imgs_lv0 = get_img_patches(HE_Img, locations_lv0, patch_size[0], level=0)
-IHC_Imgs_lv3 = get_img_patches(IHC_Img, locations_lv3, patch_size[3], level=3)
-IHC_Imgs_lv2 = get_img_patches(IHC_Img, locations_lv2, patch_size[2], level=2)
-IHC_Imgs_lv1 = get_img_patches(IHC_Img, locations_lv1, patch_size[1], level=1)
-if VERBOSE:
-    IHC_Imgs_lv0 = get_img_patches(IHC_Img, locations_lv0, patch_size[0], level=0)
-#######################################################
-print("Spend %s s" % str(time.time()-t0))
-print("Getting raw registration")
-# FFT
-Raw_FFT_lv3, scores_FFT_lv3 = raw_reg_batch(HE_Imgs_lv3, IHC_Imgs_lv3, method="FFT")
-Raw_FFT_lv2, scores_FFT_lv2 = raw_reg_batch(HE_Imgs_lv2, IHC_Imgs_lv2, method="FFT")
-Raw_FFT_lv1, scores_FFT_lv1 = raw_reg_batch(HE_Imgs_lv1, IHC_Imgs_lv1, method="FFT")
-if VERBOSE:
-    # Prove that it's impossible to directly match at highest resolution
-    Raw_FFT_lv0, scores_FFT_lv0 = raw_reg_batch(HE_Imgs_lv0, IHC_Imgs_lv0, method="FFT")
+    print("Spend %s s" % str(time.time()-t0))
 
-if not RELEASE:
-    # ECC
-    Raw_ECC_lv3, scores_ECC_lv3 = raw_reg_batch(HE_Imgs_lv3, IHC_Imgs_lv3, method="ECC")
-    Raw_ECC_lv2, scores_ECC_lv2 = raw_reg_batch(HE_Imgs_lv2, IHC_Imgs_lv2, method="ECC")
-    Raw_ECC_lv1, scores_ECC_lv1 = raw_reg_batch(HE_Imgs_lv1, IHC_Imgs_lv1, method="ECC")
+    print("Getting image patches from WSI")
+    #######################################################
+    # extract patches from image levels
+    HE_Imgs_lv3 = get_img_patches(HE_Img, locations_lv3, patch_size[3], level=3, mod="HE")
+    HE_Imgs_lv2 = get_img_patches(HE_Img, locations_lv2, patch_size[2], level=2, mod="HE")
+    HE_Imgs_lv1 = get_img_patches(HE_Img, locations_lv1, patch_size[1], level=1, mod="HE")
     if VERBOSE:
-        Raw_ECC_lv0, scores_ECC_lv0 = raw_reg_batch(HE_Imgs_lv0, IHC_Imgs_lv0, method="ECC")
-    # SIFT
-    Raw_SIFT_lv3, scores_SIFT_lv3 = raw_reg_batch(HE_Imgs_lv3, IHC_Imgs_lv3, method="SIFT")
-    Raw_SIFT_lv2, scores_SIFT_lv2 = raw_reg_batch(HE_Imgs_lv2, IHC_Imgs_lv2, method="SIFT")
-    Raw_SIFT_lv1, scores_SIFT_lv1 = raw_reg_batch(HE_Imgs_lv1, IHC_Imgs_lv1, method="SIFT")
+        HE_Imgs_lv0 = get_img_patches(HE_Img, locations_lv0, patch_size[0], level=0, mod="HE")
+
+    IHC_Imgs_lv3 = get_img_patches(IHC_Img, locations_lv3_IHC, patch_size[3], level=3, mod="IHC")
+    IHC_Imgs_lv2 = get_img_patches(IHC_Img, locations_lv2_IHC, patch_size[2], level=2, mod="IHC")
+    IHC_Imgs_lv1 = get_img_patches(IHC_Img, locations_lv1_IHC, patch_size[1], level=1, mod="IHC")
     if VERBOSE:
-        Raw_SIFT_lv0, scores_SIFT_lv0 = raw_reg_batch(HE_Imgs_lv0, IHC_Imgs_lv0, method="SIFT")
-    # SIFT_ENH
-    Raw_SIFT_ENH_lv3, scores_SIFT_ENH_lv3 = raw_reg_batch(HE_Imgs_lv3, IHC_Imgs_lv3, method="SIFT_ENH")
-    Raw_SIFT_ENH_lv2, scores_SIFT_ENH_lv2 = raw_reg_batch(HE_Imgs_lv2, IHC_Imgs_lv2, method="SIFT_ENH")
-    Raw_SIFT_ENH_lv1, scores_SIFT_ENH_lv1 = raw_reg_batch(HE_Imgs_lv1, IHC_Imgs_lv1, method="SIFT_ENH")
+        IHC_Imgs_lv0 = get_img_patches(IHC_Img, locations_lv0_IHC, patch_size[0], level=0, mod="IHC")
+    #######################################################
+    print("Spend %s s" % str(time.time()-t0))
+    print("Getting raw registration")
+    downsample_rate = HE_Img.level_downsamples
+    # FFT
+    print("FFT method")
+    Raw_FFT_lv3, scores_FFT_lv3 = raw_reg_batch(HE_Imgs_lv3, IHC_Imgs_lv3, init_offset, downsample_rate, level=3, method="FFT")
+    Raw_FFT_lv2, scores_FFT_lv2 = raw_reg_batch(HE_Imgs_lv2, IHC_Imgs_lv2, init_offset, downsample_rate, level=2, method="FFT")
+    Raw_FFT_lv1, scores_FFT_lv1 = raw_reg_batch(HE_Imgs_lv1, IHC_Imgs_lv1, init_offset, downsample_rate, level=1, method="FFT")
     if VERBOSE:
-        Raw_SIFT_ENH_lv0, scores_SIFT_ENH_lv0 = raw_reg_batch(HE_Imgs_lv0, IHC_Imgs_lv0, method="SIFT_ENH")
-#######################################################
-# KDE
-KDE_weights_FFT_lv3 = offset_kde(Raw_FFT_lv3)
-KDE_weights_FFT_lv2 = offset_kde(Raw_FFT_lv2)
-KDE_weights_FFT_lv1 = offset_kde(Raw_FFT_lv1)
-if not RELEASE:
-    KDE_weights_ECC_lv3 = offset_kde(Raw_ECC_lv3)
-    KDE_weights_ECC_lv2 = offset_kde(Raw_ECC_lv2)
-    KDE_weights_ECC_lv1 = offset_kde(Raw_ECC_lv1)
+        # Prove that it's impossible to directly match at highest resolution
+        Raw_FFT_lv0, scores_FFT_lv0 = raw_reg_batch(HE_Imgs_lv0, IHC_Imgs_lv0,init_offset, downsample_rate, level=0, method="FFT")
 
-    KDE_weights_SIFT_lv3 = offset_kde(Raw_SIFT_lv3)
-    KDE_weights_SIFT_lv2 = offset_kde(Raw_SIFT_lv2)
-    KDE_weights_SIFT_lv1 = offset_kde(Raw_SIFT_lv1)
+    if not RELEASE:
+        # ECC
+        print("ECC method")
+        Raw_ECC_lv3, scores_ECC_lv3 = raw_reg_batch(HE_Imgs_lv3, IHC_Imgs_lv3,init_offset, downsample_rate, level=3, method="ECC")
+        Raw_ECC_lv2, scores_ECC_lv2 = raw_reg_batch(HE_Imgs_lv2, IHC_Imgs_lv2,init_offset, downsample_rate, level=2, method="ECC")
+        Raw_ECC_lv1, scores_ECC_lv1 = raw_reg_batch(HE_Imgs_lv1, IHC_Imgs_lv1,init_offset, downsample_rate, level=1, method="ECC")
+        if VERBOSE:
+            Raw_ECC_lv0, scores_ECC_lv0 = raw_reg_batch(HE_Imgs_lv0, IHC_Imgs_lv0,init_offset, downsample_rate, level=0, method="ECC")
+        # SIFT
+        print("SIFT method")
+        Raw_SIFT_lv3, scores_SIFT_lv3 = raw_reg_batch(HE_Imgs_lv3, IHC_Imgs_lv3,init_offset, downsample_rate, level=3, method="SIFT")
+        Raw_SIFT_lv2, scores_SIFT_lv2 = raw_reg_batch(HE_Imgs_lv2, IHC_Imgs_lv2,init_offset, downsample_rate, level=2, method="SIFT")
+        Raw_SIFT_lv1, scores_SIFT_lv1 = raw_reg_batch(HE_Imgs_lv1, IHC_Imgs_lv1,init_offset, downsample_rate, level=1, method="SIFT")
+        if VERBOSE:
+            Raw_SIFT_lv0, scores_SIFT_lv0 = raw_reg_batch(HE_Imgs_lv0, IHC_Imgs_lv0,init_offset, downsample_rate, level=0, method="SIFT")
+        # SIFT_ENH
+        print("SIFT_ENH method")
+        Raw_SIFT_ENH_lv3, scores_SIFT_ENH_lv3 = raw_reg_batch(HE_Imgs_lv3, IHC_Imgs_lv3,init_offset, downsample_rate, level=3, method="SIFT_ENH")
+        Raw_SIFT_ENH_lv2, scores_SIFT_ENH_lv2 = raw_reg_batch(HE_Imgs_lv2, IHC_Imgs_lv2,init_offset, downsample_rate, level=2, method="SIFT_ENH")
+        Raw_SIFT_ENH_lv1, scores_SIFT_ENH_lv1 = raw_reg_batch(HE_Imgs_lv1, IHC_Imgs_lv1,init_offset, downsample_rate, level=1, method="SIFT_ENH")
+        if VERBOSE:
+            Raw_SIFT_ENH_lv0, scores_SIFT_ENH_lv0 = raw_reg_batch(HE_Imgs_lv0, IHC_Imgs_lv0,init_offset, downsample_rate, level=0, method="SIFT_ENH")
+    #######################################################
+    # KDE
+    KDE_weights_FFT_lv3 = offset_kde(Raw_FFT_lv3)
+    KDE_weights_FFT_lv2 = offset_kde(Raw_FFT_lv2)
+    KDE_weights_FFT_lv1 = offset_kde(Raw_FFT_lv1)
+    if not RELEASE:
+        KDE_weights_ECC_lv3 = offset_kde(Raw_ECC_lv3)
+        KDE_weights_ECC_lv2 = offset_kde(Raw_ECC_lv2)
+        KDE_weights_ECC_lv1 = offset_kde(Raw_ECC_lv1)
 
-    KDE_weights_SIFT_ENH_lv3 = offset_kde(Raw_SIFT_ENH_lv3)
-    KDE_weights_SIFT_ENH_lv2 = offset_kde(Raw_SIFT_ENH_lv2)
-    KDE_weights_SIFT_ENH_lv1 = offset_kde(Raw_SIFT_ENH_lv1)
+        KDE_weights_SIFT_lv3 = offset_kde(Raw_SIFT_lv3)
+        KDE_weights_SIFT_lv2 = offset_kde(Raw_SIFT_lv2)
+        KDE_weights_SIFT_lv1 = offset_kde(Raw_SIFT_lv1)
 
-    # draw figures
-    print("Draw evaluation figures")
-print("Spend %s s" % str(time.time()-t0))
-print("Getting refined offset")
-#######################################################
-downsample_rate = HE_Img.level_downsamples
-# regression
-KDE_offset_FFT = HL_fit([Raw_FFT_lv3, Raw_FFT_lv2, Raw_FFT_lv1], [KDE_weights_FFT_lv3, KDE_weights_FFT_lv2, KDE_weights_FFT_lv1],downsample_rate)
-Score_offset_FFT = HL_fit([Raw_FFT_lv3, Raw_FFT_lv2, Raw_FFT_lv1], [scores_FFT_lv3, scores_FFT_lv2, scores_FFT_lv1],downsample_rate)
-if not RELEASE:
-    KDE_offset_ECC = HL_fit([Raw_ECC_lv3, Raw_ECC_lv2, Raw_ECC_lv1], [KDE_weights_ECC_lv3, KDE_weights_ECC_lv2, KDE_weights_ECC_lv1])
-    Score_offset_ECC = HL_fit([Raw_ECC_lv3, Raw_ECC_lv2, Raw_ECC_lv1], [scores_ECC_lv3, scores_ECC_lv2, scores_ECC_lv1])
-    KDE_offset_SIFT = HL_fit([Raw_SIFT_lv3, Raw_SIFT_lv2, Raw_SIFT_lv1], [KDE_weights_SIFT_lv3, KDE_weights_SIFT_lv2, KDE_weights_SIFT_lv1])
-    Score_offset_SIFT = HL_fit([Raw_SIFT_lv3, Raw_SIFT_lv2, Raw_SIFT_lv1], [scores_SIFT_lv3, scores_SIFT_lv2, scores_SIFT_lv1])
-    KDE_offset_SIFT_ENH = HL_fit([Raw_SIFT_ENH_lv3, Raw_SIFT_ENH_lv2, Raw_SIFT_ENH_lv1],[KDE_weights_SIFT_ENH_lv3, KDE_weights_SIFT_ENH_lv2, KDE_weights_SIFT_ENH_lv1])
-    Score_offset_SIFT_ENH = HL_fit([Raw_SIFT_ENH_lv3, Raw_SIFT_ENH_lv2, Raw_SIFT_ENH_lv1], [scores_SIFT_ENH_lv3, scores_SIFT_ENH_lv2, scores_SIFT_ENH_lv1])
-if VERBOSE:
-    # draw figures
-    print("Draw evaluation figures")
-print("KDE result: %d, %d" % (int(KDE_offset_FFT[0]), int(KDE_offset_FFT[1])))
-print("Similarity result: %d, %d" % (int(Score_offset_FFT[0]), int(Score_offset_FFT[1])))
-print("Spend %s s" % str(time.time()-t0))
+        KDE_weights_SIFT_ENH_lv3 = offset_kde(Raw_SIFT_ENH_lv3)
+        KDE_weights_SIFT_ENH_lv2 = offset_kde(Raw_SIFT_ENH_lv2)
+        KDE_weights_SIFT_ENH_lv1 = offset_kde(Raw_SIFT_ENH_lv1)
 
+        # draw figures
+        print("Draw evaluation figures")
+    print("Spend %s s" % str(time.time()-t0))
+    print("Getting refined offset")
+    #######################################################
 
+    # regression
+    KDE_offset_FFT = HL_fit([Raw_FFT_lv3, Raw_FFT_lv2, Raw_FFT_lv1], [KDE_weights_FFT_lv3, KDE_weights_FFT_lv2, KDE_weights_FFT_lv1],downsample_rate)
+    Score_offset_FFT = HL_fit([Raw_FFT_lv3, Raw_FFT_lv2, Raw_FFT_lv1], [scores_FFT_lv3, scores_FFT_lv2, scores_FFT_lv1],downsample_rate)
+    if not RELEASE:
+        KDE_offset_ECC = HL_fit([Raw_ECC_lv3, Raw_ECC_lv2, Raw_ECC_lv1], [KDE_weights_ECC_lv3, KDE_weights_ECC_lv2, KDE_weights_ECC_lv1])
+        Score_offset_ECC = HL_fit([Raw_ECC_lv3, Raw_ECC_lv2, Raw_ECC_lv1], [scores_ECC_lv3, scores_ECC_lv2, scores_ECC_lv1])
+        KDE_offset_SIFT = HL_fit([Raw_SIFT_lv3, Raw_SIFT_lv2, Raw_SIFT_lv1], [KDE_weights_SIFT_lv3, KDE_weights_SIFT_lv2, KDE_weights_SIFT_lv1])
+        Score_offset_SIFT = HL_fit([Raw_SIFT_lv3, Raw_SIFT_lv2, Raw_SIFT_lv1], [scores_SIFT_lv3, scores_SIFT_lv2, scores_SIFT_lv1])
+        KDE_offset_SIFT_ENH = HL_fit([Raw_SIFT_ENH_lv3, Raw_SIFT_ENH_lv2, Raw_SIFT_ENH_lv1],[KDE_weights_SIFT_ENH_lv3, KDE_weights_SIFT_ENH_lv2, KDE_weights_SIFT_ENH_lv1])
+        Score_offset_SIFT_ENH = HL_fit([Raw_SIFT_ENH_lv3, Raw_SIFT_ENH_lv2, Raw_SIFT_ENH_lv1], [scores_SIFT_ENH_lv3, scores_SIFT_ENH_lv2, scores_SIFT_ENH_lv1])
+    if VERBOSE:
+        # draw figures
+        print("Draw evaluation figures")
+    print("KDE result: %d, %d" % (int(KDE_offset_FFT[0]), int(KDE_offset_FFT[1])))
+    print("Similarity result: %d, %d" % (int(Score_offset_FFT[0]), int(Score_offset_FFT[1])))
+    print("Spend %s s" % str(time.time()-t0))
 
+    f_ele = os.path.split(save_to_txt)
+    sv_fn = os.path.splitext(f_ele[1])
+    save_to_txt_fft = os.path.join(f_ele[0], sv_fn[0]+"_fft.csv")
+    fp_sv = open(save_to_txt_fft, 'a')
+    wrt_str = ",".join([HE_n, IHC_n, str(KDE_offset_FFT[0]),str(KDE_offset_FFT[1]), str(Score_offset_FFT[0]), str(Score_offset_FFT[1])])
+    fp_sv.write(wrt_str+"\n")
+    if VERBOSE:
+        wrt_str = ",".join([HE_n, IHC_n, str(KDE_offset_ECC[0]),str(KDE_offset_ECC[1]), str(Score_offset_ECC[0]), str(Score_offset_ECC[1])])
+        save_to_txt_ecc = os.path.join(f_ele[0], sv_fn[0] + "_ecc.csv")
+        fp_sv = open(save_to_txt_ecc, 'a')
+        fp_sv.write(wrt_str+"\n")
 
+        wrt_str = ",".join([HE_n, IHC_n, str(KDE_offset_SIFT[0]),str(KDE_offset_SIFT[1]), str(Score_offset_SIFT[0]), str(Score_offset_SIFT[1])])
+        save_to_txt_sift = os.path.join(f_ele[0], sv_fn[0] + "_sift.csv")
+        fp_sv = open(save_to_txt_sift, 'a')
+        fp_sv.write(wrt_str+"\n")
 
-
+        wrt_str = ",".join([HE_n, IHC_n, str(KDE_offset_SIFT_ENH[0]),str(KDE_offset_SIFT_ENH[1]), str(Score_offset_SIFT_ENH[0]), str(Score_offset_SIFT_ENH[1])])
+        save_to_txt_sift_enh = os.path.join(f_ele[0], sv_fn[0] + "_sift_enh.csv")
+        fp_sv = open(save_to_txt_sift_enh, 'a')
+        fp_sv.write(wrt_str+"\n")
+    fp_sv.close()
 
 
 
