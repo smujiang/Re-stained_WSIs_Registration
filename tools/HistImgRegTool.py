@@ -162,7 +162,7 @@ class ImgRegistration(QWidget):
         self.BoxAngle.setRange(-90, 90)  # rotate as degree
         self.BoxAngle.setSingleStep(1)
         self.AutoRegButton.setStyleSheet("background-color: green;")
-        self.EditSaveOffsetCSV.setText("H:\\HE_IHC_Stains\\log\\offsets.csv")
+        self.EditSaveOffsetCSV.setText("H:\\HE_IHC_Stains\\log\\groundTruth.csv")
         self.Save2CSVButton.clicked.connect(self.Save2CSV)
         self.Save2CSVButton.setEnabled(False)
         self.EditSaveOffsetCSV.setEnabled(False)
@@ -445,13 +445,6 @@ class ImgRegistration(QWidget):
                 # self.EditAbsCoordinateFloatY.setEnabled(True)
 
     def openWSIDialog(self, ImgType):
-        # options = QFileDialog.Options()
-        # print("1")
-        # options |= QFileDialog.DontUseNativeDialog
-        # default_dir = "H:\\HE_IHC_Stains"
-        # print("3")
-        # fileName, _ = QFileDialog.getOpenFileName(self, "Select "+ImgType, default_dir, "All Files (*)", options=options)
-
         dialog = QFileDialog(self, "Select "+ImgType)
         dialog.setFileMode(QFileDialog.AnyFile)
         dialog.setNameFilter(str("Images (*.svs)"))
