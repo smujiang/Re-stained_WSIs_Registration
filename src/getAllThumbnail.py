@@ -12,7 +12,7 @@ level = 0
 thumbnail_max_size = (512,512)
 
 if __name__ == '__main__':
-    WSI_names = fnmatch.filter(os.listdir(data_dir), 'Biliary*')
+    WSI_names = fnmatch.filter(os.listdir(data_dir), 'Merkel-CC*')
     for wsi_name in WSI_names:
         slide_path = os.path.join(data_dir, wsi_name)
         # out_path = os.path.join(data_out_dir, wsi_name[0:-4])
