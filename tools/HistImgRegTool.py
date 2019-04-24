@@ -1,9 +1,12 @@
+import random
 import sys, os
 import openslide
 import math
 import numpy as np
 import imreg_dft as ird
 import scipy as sp
+from scipy import ndimage
+from skimage.color import rgb2hsv
 from PIL import Image
 from PIL.ImageQt import ImageQt
 from PyQt5.QtCore import QDir, Qt, pyqtSlot, QCoreApplication, QMetaObject, QObject, QPoint, QEvent
@@ -100,10 +103,10 @@ class ImgRegistration(QWidget):
         self.width = 640
         self.height = 480
 
-        self.T_Orig_X_Coord = 21000
-        self.T_Orig_Y_Coord = 21000
-        self.F_Orig_X_Coord = 21000  # 21249 + 42
-        self.F_Orig_Y_Coord = 21000
+        self.T_Orig_X_Coord = 0
+        self.T_Orig_Y_Coord = 0
+        self.F_Orig_X_Coord = 0
+        self.F_Orig_Y_Coord = 0
         self.init_offset = [0, 0]
         self.F_Angle = 0
 
@@ -139,10 +142,10 @@ class ImgRegistration(QWidget):
         self.FloatImageLabel.setPixmap(pixmap_if)
         self.FloatImageLabel.setCursor(QCursor(Qt.CrossCursor))
         self.BoxOffsetY.setFixedWidth(80)
-        self.BoxOffsetY.setRange(-2000, 2000)
+        self.BoxOffsetY.setRange(-5000, 5000)
         self.BoxOffsetY.setSingleStep(1)
         self.BoxOffsetX.setFixedWidth(80)
-        self.BoxOffsetX.setRange(-2000, 2000)
+        self.BoxOffsetX.setRange(-5000, 5000)
         self.BoxOffsetX.setSingleStep(1)
         self.EditAbsCoordinateTemplateX.setFixedWidth(100)
         self.EditAbsCoordinateTemplateY.setFixedWidth(100)
@@ -398,8 +401,32 @@ class ImgRegistration(QWidget):
             print("Read file %s" % filename_fix)
             self.EditImgNameTemplate.setText(filename_fix)
             self.sd_fix = openslide.OpenSlide(filename_fix)
-            Img_fix_col = self.sd_fix.read_region((self.T_Orig_X_Coord, self.T_Orig_Y_Coord), 0,
-                                                  (self.ImgPatchSize, self.ImgPatchSize))
+            #
+            # get the initial view of location
+            WSI_Width, WSI_Height = self.sd_fix.dimensions
+            thumb_size_x = int(WSI_Width / 100)
+            thumb_size_y = int(WSI_Height / 100)
+            thumbnail = self.sd_fix.get_thumbnail([thumb_size_x, thumb_size_y])
+            rgb_image_array = np.array(thumbnail)
+            hsv_img = rgb2hsv(rgb_image_array)
+            value_img = hsv_img[:, :, 2]
+            binary_img = value_img < 0.8  # brightness higher than 0.8
+            binary_img = ndimage.binary_erosion(binary_img, structure=np.ones((5, 5)))
+            cnt = 0
+            while cnt < 2000:
+                x = random.randint(2, thumb_size_x - 2)
+                y = random.randint(2, thumb_size_y - 2)
+                cnt += 1
+                if binary_img[y, x]:
+                    self.T_Orig_X_Coord = int((x * 100))
+                    self.T_Orig_Y_Coord = int((y * 100))
+                    break
+            self.F_Orig_X_Coord = self.T_Orig_X_Coord
+            self.F_Orig_Y_Coord = self.T_Orig_Y_Coord
+            self.F_Abs_X_Coord = self.T_Orig_X_Coord
+            self.F_Abs_Y_Coord = self.T_Orig_Y_Coord
+            # read and show the region
+            Img_fix_col = self.sd_fix.read_region((self.T_Orig_X_Coord, self.T_Orig_Y_Coord), 0, (self.ImgPatchSize, self.ImgPatchSize))
             pixmap_fix = ImageQt(Img_fix_col)
             self.TemplatePixmap = QPixmap.fromImage(pixmap_fix)
             self.TemplateImageLabel.setPixmap(self.TemplatePixmap)

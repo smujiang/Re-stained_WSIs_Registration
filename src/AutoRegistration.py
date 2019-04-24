@@ -315,7 +315,7 @@ def HL_fit(offsets, scores,level_ratio):
 
 
 RELEASE = False
-VERBOSE = True
+VERBOSE = False
 DRAW_FIG = False
 
 
