@@ -19,8 +19,9 @@ def get_co_registration_pairs(data_dir):
     case_ids = set()
     wsi_names = os.listdir(data_dir)
     for f_name in wsi_names:
-        c_id = get_case_id(f_name)
-        case_ids.add(c_id)
+        if ".svs" in f_name:
+            c_id = get_case_id(f_name)
+            case_ids.add(c_id)
     for c_id in case_ids:
         HE_Caspase = pre_fix + c_id + "_" + HEs[0] + ".svs"
         Caspase = pre_fix + c_id + "_" + IHCs[0] + ".svs"
