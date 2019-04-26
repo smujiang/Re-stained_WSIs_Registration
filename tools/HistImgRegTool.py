@@ -1,7 +1,6 @@
 import random
 import sys, os
 import openslide
-import math
 import numpy as np
 import imreg_dft as ird
 import scipy as sp
@@ -9,12 +8,10 @@ from scipy import ndimage
 from skimage.color import rgb2hsv
 from PIL import Image
 from PIL.ImageQt import ImageQt
-from PyQt5.QtCore import QDir, Qt, pyqtSlot, QCoreApplication, QMetaObject, QObject, QPoint, QEvent
-from PyQt5.QtGui import QImage, QPainter, QPalette, QPixmap, QPicture, QCursor, QPen
-from PyQt5.QtWidgets import (QAction, QVBoxLayout, QHBoxLayout, QPushButton, QCheckBox, QWidget, QApplication,
-                             QFileDialog, QLabel,
-                             QMainWindow, QMenu, QMessageBox, QScrollArea, QSizePolicy, QTextEdit, QLineEdit, QLayout,
-                             QComboBox, QSpinBox, QDoubleSpinBox)
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPainter, QPixmap, QCursor, QPen
+from PyQt5.QtWidgets import (QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QApplication,
+                             QFileDialog, QLabel, QMessageBox, QLineEdit, QLayout, QSpinBox, QDoubleSpinBox)
 
 
 class ImgRegistration(QWidget):
@@ -142,10 +139,10 @@ class ImgRegistration(QWidget):
         self.FloatImageLabel.setPixmap(pixmap_if)
         self.FloatImageLabel.setCursor(QCursor(Qt.CrossCursor))
         self.BoxOffsetY.setFixedWidth(80)
-        self.BoxOffsetY.setRange(-5000, 5000)
+        self.BoxOffsetY.setRange(-10000, 10000)
         self.BoxOffsetY.setSingleStep(1)
         self.BoxOffsetX.setFixedWidth(80)
-        self.BoxOffsetX.setRange(-5000, 5000)
+        self.BoxOffsetX.setRange(-10000, 10000)
         self.BoxOffsetX.setSingleStep(1)
         self.EditAbsCoordinateTemplateX.setFixedWidth(100)
         self.EditAbsCoordinateTemplateY.setFixedWidth(100)
