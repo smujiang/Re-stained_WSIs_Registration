@@ -384,6 +384,16 @@ class ImgRegistration(QWidget):
             QMessageBox.warning(self, 'Message', "You must open both images first.", QMessageBox.Ok)
 
     def Save2CSV(self):
+        f_path = os.path.split(self.EditSaveOffsetCSV.text())[0]
+        if not os.path.exists(f_path):
+            msg_box = QMessageBox(QMessageBox.Question, self.tr("Confirm saving path"),
+                                  self.tr("Folder not exist, check the path and make sure you have write permission?"))
+            msg_box.setStandardButtons(QMessageBox.No | QMessageBox.Yes)
+            msg_box.exec()
+            if msg_box.result() == QMessageBox.Yes:
+                os.makedirs(f_path)
+            else:
+                return
         fp = open(self.EditSaveOffsetCSV.text(),"a")
         t_f = os.path.split(self.EditImgNameTemplate.text())[1]
         f_f = os.path.split(self.EditImgNameFloating.text())[1]
