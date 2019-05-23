@@ -397,7 +397,8 @@ class ImgRegistration(QWidget):
         fp = open(self.EditSaveOffsetCSV.text(),"a")
         t_f = os.path.split(self.EditImgNameTemplate.text())[1]
         f_f = os.path.split(self.EditImgNameFloating.text())[1]
-        wrt_str = ",".join([t_f,f_f, self.BoxOffsetX.text(), self.BoxOffsetY.text()])
+        wrt_str = ",".join([t_f,f_f, self.EditAbsCoordinateTemplateX.text(), self.EditAbsCoordinateTemplateY.text(),
+                            self.BoxOffsetX.text(), self.BoxOffsetY.text()])
         fp.write(wrt_str+"\n")
         fp.close()
 
