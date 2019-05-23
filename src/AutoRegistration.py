@@ -502,7 +502,6 @@ def match_WSI(HE_Img_name, IHC_Img_name, methods, save_to_txt):
         Raw_SIFT_ENH_lv3, scores_SIFT_ENH_lv3 = raw_reg_batch(HE_Imgs_lv3, IHC_Imgs_lv3,init_offset, downsample_rate, level=3, method="SIFT_ENH")
         Raw_SIFT_ENH_lv2, scores_SIFT_ENH_lv2 = raw_reg_batch(HE_Imgs_lv2, IHC_Imgs_lv2,init_offset, downsample_rate, level=2, method="SIFT_ENH")
         Raw_SIFT_ENH_lv1, scores_SIFT_ENH_lv1 = raw_reg_batch(HE_Imgs_lv1, IHC_Imgs_lv1,init_offset, downsample_rate, level=1, method="SIFT_ENH")
-
     #######################################################
     # KDE
     if EN_FFT:
@@ -531,15 +530,39 @@ def match_WSI(HE_Img_name, IHC_Img_name, methods, save_to_txt):
         Score_offset_FFT,slp_score_fft = HL_fit([Raw_FFT_lv3, Raw_FFT_lv2, Raw_FFT_lv1], [scores_FFT_lv3, scores_FFT_lv2, scores_FFT_lv1],downsample_rate)
         print("KDE result: %d, %d" % (int(KDE_offset_FFT[0]), int(KDE_offset_FFT[1])))
         print("Similarity result: %d, %d" % (int(Score_offset_FFT[0]), int(Score_offset_FFT[1])))
+        save_name_npy = os.path.join(os.path.split(save_to_txt)[0], HE_n, "FFT_results.npy")
+        offsets_fft = {"lv3": Raw_FFT_lv3, "lv2": Raw_FFT_lv2, "lv1": Raw_FFT_lv1,
+                       "lv3_score": scores_FFT_lv3, "lv2_score": scores_FFT_lv2, "lv1_score": scores_FFT_lv1,
+                       "lv3_kde": KDE_weights_FFT_lv3, "lv2_kde": KDE_weights_FFT_lv2, "lv1_kde": KDE_weights_FFT_lv1,
+                       "kde_res": KDE_offset_FFT, "kde_slp": slp_kde_fft, "score_res": Score_offset_FFT, "score_slp": slp_score_fft}
+        np.save(save_name_npy, offsets_fft)
     if EN_ECC:
         KDE_offset_ECC,slp_kde_ecc = HL_fit([Raw_ECC_lv3, Raw_ECC_lv2, Raw_ECC_lv1], [KDE_weights_ECC_lv3, KDE_weights_ECC_lv2, KDE_weights_ECC_lv1],downsample_rate)
         Score_offset_ECC,slp_score_ecc = HL_fit([Raw_ECC_lv3, Raw_ECC_lv2, Raw_ECC_lv1], [scores_ECC_lv3, scores_ECC_lv2, scores_ECC_lv1],downsample_rate)
+        save_name_npy = os.path.join(os.path.split(save_to_txt)[0], HE_n, "ECC_results.npy")
+        offsets_ecc = {"lv3": Raw_ECC_lv3, "lv2": Raw_ECC_lv2, "lv1": Raw_ECC_lv1,
+                       "lv3_score": scores_ECC_lv3, "lv2_score": scores_ECC_lv2, "lv1_score": scores_ECC_lv1,
+                       "lv3_kde": KDE_weights_ECC_lv3, "lv2_kde": KDE_weights_ECC_lv2, "lv1_kde": KDE_weights_ECC_lv1,
+                       "kde_res": KDE_offset_ECC, "kde_slp": slp_kde_ecc, "score_res": Score_offset_ECC, "score_slp": slp_score_ecc}
+        np.save(save_name_npy, offsets_ecc)
     if EN_SIFT:
         KDE_offset_SIFT,slp_kde_sift = HL_fit([Raw_SIFT_lv3, Raw_SIFT_lv2, Raw_SIFT_lv1], [KDE_weights_SIFT_lv3, KDE_weights_SIFT_lv2, KDE_weights_SIFT_lv1],downsample_rate)
         Score_offset_SIFT,slp_score_sift = HL_fit([Raw_SIFT_lv3, Raw_SIFT_lv2, Raw_SIFT_lv1], [scores_SIFT_lv3, scores_SIFT_lv2, scores_SIFT_lv1],downsample_rate)
+        save_name_npy = os.path.join(os.path.split(save_to_txt)[0], HE_n, "SIFT_results.npy")
+        offsets_sift = {"lv3": Raw_SIFT_lv3, "lv2": Raw_SIFT_lv2, "lv1": Raw_SIFT_lv1,
+                        "lv3_score": scores_SIFT_lv3, "lv2_score": scores_SIFT_lv2, "lv1_score": scores_SIFT_lv1,
+                        "lv3_kde": KDE_weights_SIFT_lv3, "lv2_kde": KDE_weights_SIFT_lv2, "lv1_kde": KDE_weights_SIFT_lv1,
+                        "kde_res": KDE_offset_SIFT, "kde_slp": slp_kde_sift, "score_res": Score_offset_SIFT, "score_slp": slp_score_sift}
+        np.save(save_name_npy, offsets_sift)
     if EN_SIFT_ENH:
         KDE_offset_SIFT_ENH,slp_kde_sift_enh = HL_fit([Raw_SIFT_ENH_lv3, Raw_SIFT_ENH_lv2, Raw_SIFT_ENH_lv1],[KDE_weights_SIFT_ENH_lv3, KDE_weights_SIFT_ENH_lv2, KDE_weights_SIFT_ENH_lv1],downsample_rate)
         Score_offset_SIFT_ENH,slp_score_sift_enh = HL_fit([Raw_SIFT_ENH_lv3, Raw_SIFT_ENH_lv2, Raw_SIFT_ENH_lv1], [scores_SIFT_ENH_lv3, scores_SIFT_ENH_lv2, scores_SIFT_ENH_lv1],downsample_rate)
+        save_name_npy = os.path.join(os.path.split(save_to_txt)[0], HE_n, "SIFT_ENH_resluts.npy")
+        offsets_sift_enh = {"lv3": Raw_SIFT_ENH_lv3, "lv2": Raw_SIFT_ENH_lv2, "lv1": Raw_SIFT_ENH_lv1,
+                            "lv3_score": scores_SIFT_ENH_lv3, "lv2_score": scores_SIFT_ENH_lv2, "lv1_score": scores_SIFT_ENH_lv1,
+                            "lv3_kde": KDE_weights_SIFT_ENH_lv3, "lv2_kde": KDE_weights_SIFT_ENH_lv2, "lv1_kde": KDE_weights_SIFT_ENH_lv1,
+                            "kde_res": KDE_offset_SIFT_ENH, "kde_slp": slp_kde_sift_enh, "score_res": Score_offset_SIFT_ENH, "score_slp": slp_score_sift_enh}
+        np.save(save_name_npy, offsets_sift_enh)
     if VERBOSE:
         # draw figures
         print("Draw evaluation figures")
@@ -547,27 +570,15 @@ def match_WSI(HE_Img_name, IHC_Img_name, methods, save_to_txt):
         ground_truth_offset = get_ground_truth(ground_truth_csv, HE_n)
         print("Ground truth: %d, %d" % (int(ground_truth_offset[0]), int(ground_truth_offset[1])))
         if EN_FFT:
-            save_name_npy = os.path.join(os.path.split(save_to_txt)[0], HE_n,"FFT_offset_levels.npy")
-            offsets_fft = {"lv3": Raw_FFT_lv3, "lv2": Raw_FFT_lv2, "lv1": Raw_FFT_lv1}
-            np.save(save_name_npy, offsets_fft)
             save_name = os.path.join(os.path.split(save_to_txt)[0], HE_n, "FFT_cross_levels.png")
             draw_cross_level_regression(ground_truth_offset, slp_kde_fft, slp_score_fft, offsets_fft, save_name, "FFT", get_he_ihcs(HE_n))
         if EN_ECC:
-            save_name_npy = os.path.join(os.path.split(save_to_txt)[0], HE_n, "ECC_offset_levels.npy")
-            offsets_ecc = {"lv3": Raw_ECC_lv3, "lv2": Raw_ECC_lv2, "lv1": Raw_ECC_lv1}
-            np.save(save_name_npy, offsets_ecc)
             save_name = os.path.join(os.path.split(save_to_txt)[0], HE_n, "ECC_cross_levels.png")
             draw_cross_level_regression(ground_truth_offset, slp_kde_ecc, slp_score_ecc, offsets_ecc, save_name, "ECC", get_he_ihcs(HE_n))
         if EN_SIFT:
-            save_name_npy = os.path.join(os.path.split(save_to_txt)[0], HE_n,"SIFT_offset_levels.npy")
-            offsets_sift = {"lv3": Raw_SIFT_lv3, "lv2": Raw_SIFT_lv2, "lv1": Raw_SIFT_lv1}
-            np.save(save_name_npy, offsets_sift)
             save_name = os.path.join(os.path.split(save_to_txt)[0], HE_n, "SIFT_cross_levels.png")
             draw_cross_level_regression(ground_truth_offset, slp_kde_sift, slp_score_sift, offsets_sift, save_name, "SIFT", get_he_ihcs(HE_n))
         if EN_SIFT_ENH:
-            save_name_npy = os.path.join(os.path.split(save_to_txt)[0], HE_n,"SIFT_ENH_offset_levels.npy")
-            offsets_sift_enh = {"lv3": Raw_SIFT_ENH_lv3, "lv2": Raw_SIFT_ENH_lv2, "lv1": Raw_SIFT_ENH_lv1}
-            np.save(save_name_npy, offsets_sift_enh)
             save_name = os.path.join(os.path.split(save_to_txt)[0], HE_n,"SIFT_ENH_cross_levels.png")
             draw_cross_level_regression(ground_truth_offset, slp_kde_sift_enh, slp_score_sift_enh, offsets_sift_enh, save_name, "SIFT_ENH", get_he_ihcs(HE_n))
     print("Spend %s s" % str(time.time()-t0))
