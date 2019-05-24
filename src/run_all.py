@@ -5,7 +5,7 @@ from getWSICases import get_co_registration_pairs
 
 RUN_SINGLE_PAIR = False
 ################################################
-data_dir = "\\\\mfad.mfroot.org\\researchmn\\DLMP-MACHINE-LEARNING\\Mitosis_Deep Learning"
+data_dir = "Z:\\Mitosis_Deep Learning"
 save_to = "H:\\HE_IHC_Stains\\log.txt"
 cases_save_to = "H:\\HE_IHC_Stains\\case_names.npy"
 if not os.path.exists(cases_save_to):
@@ -42,8 +42,8 @@ else:
                     # match_WSI(HE, IHC, ["ECC"], save_to)
                     # match_WSI(HE, IHC, ["SIFT"], save_to)
                     # match_WSI(HE, IHC, ["SIFT_ENH"], save_to)
-                    # match_WSI(HE, IHC, ["FFT","ECC","SIFT_ENH","SIFT_ENH"], save_to)
-                    match_WSI(HE, IHC, ["FFT", "SIFT"], save_to)
+                    match_WSI(HE, IHC, ["FFT","ECC","SIFT","SIFT_ENH"], save_to)
+                    # match_WSI(HE, IHC, ["ECC", "SIFT"], save_to)
                     # write to log
                     fp = open(save_to, 'a')
                     fp.write(HE + "\n")
