@@ -16,6 +16,7 @@ from skimage.color import rgb2hsv
 import time
 import logging
 import matplotlib.pyplot as plt
+import pickle
 from panorama import Stitcher
 from getWSICases import get_co_registration_pairs
 
@@ -339,9 +340,9 @@ def HL_fit(offsets, scores,level_ratio):
 
 
 RELEASE = True
-# VERBOSE = False
+VERBOSE = False
 DRAW_FIG = False
-VERBOSE = True
+# VERBOSE = True
 
 
 # EN_FFT = True
@@ -523,6 +524,8 @@ def match_WSI(HE_Img_name, IHC_Img_name, methods, save_to_txt):
     print("Spend %s s" % str(time.time()-t0))
     print("Getting refined offset")
     #######################################################
+    if not os.path.exists(os.path.join(os.path.split(save_to_txt)[0], HE_n)):
+        os.makedirs(os.path.join(os.path.split(save_to_txt)[0], HE_n), exist_ok=True)
 
     # regression
     if EN_FFT:
@@ -530,39 +533,51 @@ def match_WSI(HE_Img_name, IHC_Img_name, methods, save_to_txt):
         Score_offset_FFT,slp_score_fft = HL_fit([Raw_FFT_lv3, Raw_FFT_lv2, Raw_FFT_lv1], [scores_FFT_lv3, scores_FFT_lv2, scores_FFT_lv1],downsample_rate)
         print("KDE result: %d, %d" % (int(KDE_offset_FFT[0]), int(KDE_offset_FFT[1])))
         print("Similarity result: %d, %d" % (int(Score_offset_FFT[0]), int(Score_offset_FFT[1])))
-        save_name_npy = os.path.join(os.path.split(save_to_txt)[0], HE_n, "FFT_results.npy")
+        save_name_pkl = os.path.join(os.path.split(save_to_txt)[0], HE_n, "FFT_results.pickle")
         offsets_fft = {"lv3": Raw_FFT_lv3, "lv2": Raw_FFT_lv2, "lv1": Raw_FFT_lv1,
                        "lv3_score": scores_FFT_lv3, "lv2_score": scores_FFT_lv2, "lv1_score": scores_FFT_lv1,
                        "lv3_kde": KDE_weights_FFT_lv3, "lv2_kde": KDE_weights_FFT_lv2, "lv1_kde": KDE_weights_FFT_lv1,
                        "kde_res": KDE_offset_FFT, "kde_slp": slp_kde_fft, "score_res": Score_offset_FFT, "score_slp": slp_score_fft}
-        np.save(save_name_npy, offsets_fft)
+        # np.save(save_name_pkl, offsets_fft)
+        f = open(save_name_pkl, "wb")
+        pickle.dump(offsets_fft, f)
+        f.close()
     if EN_ECC:
         KDE_offset_ECC,slp_kde_ecc = HL_fit([Raw_ECC_lv3, Raw_ECC_lv2, Raw_ECC_lv1], [KDE_weights_ECC_lv3, KDE_weights_ECC_lv2, KDE_weights_ECC_lv1],downsample_rate)
         Score_offset_ECC,slp_score_ecc = HL_fit([Raw_ECC_lv3, Raw_ECC_lv2, Raw_ECC_lv1], [scores_ECC_lv3, scores_ECC_lv2, scores_ECC_lv1],downsample_rate)
-        save_name_npy = os.path.join(os.path.split(save_to_txt)[0], HE_n, "ECC_results.npy")
+        save_name_pkl = os.path.join(os.path.split(save_to_txt)[0], HE_n, "ECC_results.pickle")
         offsets_ecc = {"lv3": Raw_ECC_lv3, "lv2": Raw_ECC_lv2, "lv1": Raw_ECC_lv1,
                        "lv3_score": scores_ECC_lv3, "lv2_score": scores_ECC_lv2, "lv1_score": scores_ECC_lv1,
                        "lv3_kde": KDE_weights_ECC_lv3, "lv2_kde": KDE_weights_ECC_lv2, "lv1_kde": KDE_weights_ECC_lv1,
                        "kde_res": KDE_offset_ECC, "kde_slp": slp_kde_ecc, "score_res": Score_offset_ECC, "score_slp": slp_score_ecc}
-        np.save(save_name_npy, offsets_ecc)
+        # np.save(save_name_pkl, offsets_ecc)
+        f = open(save_name_pkl, "wb")
+        pickle.dump(offsets_ecc, f)
+        f.close()
     if EN_SIFT:
         KDE_offset_SIFT,slp_kde_sift = HL_fit([Raw_SIFT_lv3, Raw_SIFT_lv2, Raw_SIFT_lv1], [KDE_weights_SIFT_lv3, KDE_weights_SIFT_lv2, KDE_weights_SIFT_lv1],downsample_rate)
         Score_offset_SIFT,slp_score_sift = HL_fit([Raw_SIFT_lv3, Raw_SIFT_lv2, Raw_SIFT_lv1], [scores_SIFT_lv3, scores_SIFT_lv2, scores_SIFT_lv1],downsample_rate)
-        save_name_npy = os.path.join(os.path.split(save_to_txt)[0], HE_n, "SIFT_results.npy")
+        save_name_pkl = os.path.join(os.path.split(save_to_txt)[0], HE_n, "SIFT_results.pickle")
         offsets_sift = {"lv3": Raw_SIFT_lv3, "lv2": Raw_SIFT_lv2, "lv1": Raw_SIFT_lv1,
                         "lv3_score": scores_SIFT_lv3, "lv2_score": scores_SIFT_lv2, "lv1_score": scores_SIFT_lv1,
                         "lv3_kde": KDE_weights_SIFT_lv3, "lv2_kde": KDE_weights_SIFT_lv2, "lv1_kde": KDE_weights_SIFT_lv1,
                         "kde_res": KDE_offset_SIFT, "kde_slp": slp_kde_sift, "score_res": Score_offset_SIFT, "score_slp": slp_score_sift}
-        np.save(save_name_npy, offsets_sift)
+        # np.save(save_name_pkl, offsets_sift)
+        f = open(save_name_pkl, "wb")
+        pickle.dump(offsets_sift, f)
+        f.close()
     if EN_SIFT_ENH:
         KDE_offset_SIFT_ENH,slp_kde_sift_enh = HL_fit([Raw_SIFT_ENH_lv3, Raw_SIFT_ENH_lv2, Raw_SIFT_ENH_lv1],[KDE_weights_SIFT_ENH_lv3, KDE_weights_SIFT_ENH_lv2, KDE_weights_SIFT_ENH_lv1],downsample_rate)
         Score_offset_SIFT_ENH,slp_score_sift_enh = HL_fit([Raw_SIFT_ENH_lv3, Raw_SIFT_ENH_lv2, Raw_SIFT_ENH_lv1], [scores_SIFT_ENH_lv3, scores_SIFT_ENH_lv2, scores_SIFT_ENH_lv1],downsample_rate)
-        save_name_npy = os.path.join(os.path.split(save_to_txt)[0], HE_n, "SIFT_ENH_resluts.npy")
+        save_name_pkl = os.path.join(os.path.split(save_to_txt)[0], HE_n, "SIFT_ENH_results.pickle")
         offsets_sift_enh = {"lv3": Raw_SIFT_ENH_lv3, "lv2": Raw_SIFT_ENH_lv2, "lv1": Raw_SIFT_ENH_lv1,
                             "lv3_score": scores_SIFT_ENH_lv3, "lv2_score": scores_SIFT_ENH_lv2, "lv1_score": scores_SIFT_ENH_lv1,
                             "lv3_kde": KDE_weights_SIFT_ENH_lv3, "lv2_kde": KDE_weights_SIFT_ENH_lv2, "lv1_kde": KDE_weights_SIFT_ENH_lv1,
                             "kde_res": KDE_offset_SIFT_ENH, "kde_slp": slp_kde_sift_enh, "score_res": Score_offset_SIFT_ENH, "score_slp": slp_score_sift_enh}
-        np.save(save_name_npy, offsets_sift_enh)
+        # np.save(save_name_pkl, offsets_sift_enh)
+        f = open(save_name_pkl, "wb")
+        pickle.dump(offsets_sift_enh, f)
+        f.close()
     if VERBOSE:
         # draw figures
         print("Draw evaluation figures")
