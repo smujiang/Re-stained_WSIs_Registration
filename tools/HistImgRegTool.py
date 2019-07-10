@@ -482,7 +482,7 @@ class ImgRegistration(QWidget):
     def openWSIDialog(self, ImgType):
         dialog = QFileDialog(self, "Select "+ImgType)
         dialog.setFileMode(QFileDialog.AnyFile)
-        dialog.setNameFilter(str("Images (*.svs)"))
+        dialog.setNameFilter(str("Images (*.svs, *.tiff)"))
         dialog.setViewMode(QFileDialog.Detail)
         if dialog.exec_():
             fileNames = dialog.selectedFiles()
