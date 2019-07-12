@@ -1,0 +1,72 @@
+---
+title: "ImageReg"
+output: html_document
+---
+```{r}
+library(openxlsx)
+library(tidyverse)
+library(gridExtra)
+```
+
+Figure 2
+```{r}
+Data = NULL
+files = dir('data/')
+for (f in files){
+  for (i in 1:4){
+    tmp_f = read.xlsx(paste0('data/',f), sheet = i) 
+    for (j in 1:ncol(tmp_f)){
+      tmp_f[,j] = as.numeric(tmp_f[,j])
+    }
+    WSI = gsub(".xlsx","",f)
+    tmp_f$WSI = WSI
+    tmp_f$level = i-1
+    Data = rbind(Data, tmp_f)
+  }  
+}
+rm(tmp_f, i, j, f)
+```
+Calculate the losses
+```{r}
+Data = Data %>%
+  mutate(FFT_KDE_score = KDE_score, KDE_score=NULL) %>%
+  mutate(SIFT_ENH_x_loss = SIFT_ENH_x , SIFT_ENH_y_loss = SIFT_ENH_y ) %>%
+  mutate(SIFT_x_loss = SIFT_x, SIFT_y_loss = SIFT_y ) %>%
+  mutate(FFT_x_loss = FFT_x, FFT_y_loss = FFT_y)  %>%
+  mutate(ECC_x_loss = ECC_x, ECC_y_loss = ECC_y) 
+```
+
+Plot the losses
+```{r}
+options(scipen = 999)
+OFFSETS = Data %>%
+  select(level,WSI, contains('loss')) %>%
+  gather(contains('x_loss'),key='xloss',value='xvalue') %>%
+  gather(contains('y_loss'),key='yloss',value='yvalue') %>%
+  mutate(Method=gsub("_x_loss","",xloss), yloss=NULL,xloss=NULL) %>%
+  group_by(level, WSI,Method) %>%
+  mutate(Average_x_offset=mean(xvalue), SD_x_offset=sd(xvalue)) %>%
+  mutate(Average_y_offset=mean(yvalue), SD_y_offset=sd(yvalue)) %>%
+  select(-xvalue,-yvalue) %>%
+  unique()
+
+
+a = OFFSETS %>%
+  ggplot(aes(x=level,y=Average_x_offset, shape=Method, color=Method,
+             ymin=Average_x_offset-SD_x_offset,
+             ymax=Average_x_offset+SD_x_offset))+
+    geom_pointrange(inherit.aes = TRUE, position = position_dodge(width=0.8))+
+    facet_wrap(~WSI, scales = "free")+
+    theme_bw()
+
+b = OFFSETS %>%
+  ggplot(aes(x=level,y=Average_y_offset, shape=Method, color=Method,
+             ymin=Average_y_offset-SD_x_offset,
+             ymax=Average_y_offset+SD_x_offset))+
+    geom_pointrange(inherit.aes = TRUE, position = position_dodge(width=0.8))+
+    facet_wrap(~WSI, scales = "free")+
+    theme_bw()
+
+grid.arrange(a,b)
+ggsave('Offset_by_level.png',plot = grid.arrange(a,b), width = 8, height = 6, units="in", dpi = 300)
+```
