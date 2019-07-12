@@ -1,0 +1,82 @@
+---
+title: "Figure 6"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(ggpubr)
+```
+Figure 6
+
+```{r}
+files = dir('data/eval')[grep("log",dir('data/eval'))]
+ERROR_PROFILE = NULL
+for (i in files){
+  tmp = read.csv(paste0('data/eval/',i),header = FALSE) 
+  method_name = NULL
+  if(str_detect(string = i, pattern = "lv0")){
+      # remove the extra score
+      tmp = tmp %>% select(V1:V4)
+      method_name = toupper(gsub("log_|_lv0|.csv","",i))
+      method_name = paste(method_name, "raw", sep="_")
+  }else{
+    method_name = toupper(gsub("log_|_lv0|.csv","",i))
+    method_name = paste(method_name, "(ours)", sep=" ")
+  }
+  tmp$Source = method_name
+  names(tmp) = c("slide1","slide2","x","y","Source")
+  ERROR_PROFILE = rbind(ERROR_PROFILE, tmp)
+}
+rm(tmp, files)
+
+ERROR_PROFILE$Style2 = "Theirs"
+ERROR_PROFILE$Style2[grep("ours",ERROR_PROFILE$Source)] = "Ours"
+
+ERROR_PROFILE$Source = factor(ERROR_PROFILE$Source, levels=c(
+  'ECC_raw','ECC (ours)',
+  'FFT_raw', 'FFT (ours)',
+  'SIFT_raw','SIFT (ours)',
+  'SIFT_ENH_raw','SIFT_ENH (ours)'))
+
+ERROR_PROFILE %>% head()
+```
+
+```{r}
+
+start_num = 2500
+diff_num = 100
+a = ggplot(ERROR_PROFILE, aes(x=Source, y=x, fill=Style2))+
+geom_boxplot() +
+theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+xlab('')+
+ylab('X Error') +
+annotate("segment", x=1, xend = 2, y=start_num-diff_num, yend=start_num-diff_num) +
+annotate("text", x = 1.5, y = start_num, label = "p=2.4e-01") +
+annotate("segment", x=3, xend = 4, y=start_num-diff_num, yend=start_num-diff_num) +
+annotate("text", x = 3.5, y = start_num, label = "2.2e-184")+
+annotate("segment", x=5, xend = 6, y=start_num-diff_num, yend=start_num-diff_num) +
+annotate("text", x = 5.5, y = start_num, label = "p=9.2e-190")+
+annotate("segment", x=7, xend = 8, y=start_num-diff_num, yend=start_num-diff_num) +
+annotate("text", x = 7.5, y = start_num, label = "3.7e-177") +
+ylim(0,start_num+100)
+start_num = 2500
+diff_num = 100
+b = ggplot(ERROR_PROFILE, aes(x=Source, y=y, fill=Style2))+
+geom_boxplot() +
+theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+xlab('')+
+ylab('X Error') +
+annotate("segment", x=1, xend = 2, y=start_num-diff_num, yend=start_num-diff_num) +
+annotate("text", x = 1.5, y = start_num, label = "p=7.1e-03") +
+annotate("segment", x=3, xend = 4, y=start_num-diff_num, yend=start_num-diff_num) +
+annotate("text", x = 3.5, y = start_num, label = "2.3e-05")+
+annotate("segment", x=5, xend = 6, y=start_num-diff_num, yend=start_num-diff_num) +
+annotate("text", x = 5.5, y = start_num, label = "p=3.7e-13")+
+annotate("segment", x=7, xend = 8, y=start_num-diff_num, yend=start_num-diff_num) +
+annotate("text", x = 7.5, y = start_num, label = "1.1e-07") +
+ylim(0,start_num+100)
+ggarrange(a, b, legend="none")
+ggsave(filename = 'RegistrationErrors.png', width = 12, height = 6, units="in", dpi = 300)
+
+```
