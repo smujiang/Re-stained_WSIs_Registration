@@ -6,8 +6,9 @@ To enable cell level analysis, WSIs should be aligned. However, traditional meth
 ![alt text](./img_sample.png)   
 
 Our method provide a way to integrate these methods into a simple but effective framework, and help these methods perform more robust. If you find this repo is helpful for your project, please cite our paper:
-
-    -- Robust Hierarchical Density Estimation and Regression for Re-stained Whole Slide Image Co-registration
+```
+Jiang, Jun, Nicholas Larson, Naresh Prodduturi, Thomas Flotte, and Steven Hart. "Robust Hierarchical Density Estimation and Regression for Re-stained Histological Whole Slide Image Co-registration." BioRxiv (2019): 565564.
+```
 
 #### Description of directories  
 1. tools: WSI matching tools for manually registration and validation   
