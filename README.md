@@ -1,7 +1,11 @@
 # Re-stained whole slide image registration
 
-This is a repo about whole slide image(WSI) registration for re-stained slides.
-If you find this repo helpful to your project, please cite the paper below:
+This is a repo about whole slide image(WSI) registration for re-stained slides.   
+In clinical practice, we occasionally use different chemicals (such as H&E and IHC) to stain and re-stain to identify particular cells in the same tissue.
+To enable cell level analysis, WSIs should be aligned. However, traditional method (such as SIFT[1], ECC[2] and FFT[3]) may fail due to the drastic discrepancy in two WSIs,as shown in below. 
+![alt text](./img_sample.png)   
+
+Our method provide an effective rescue for these method. If you find this repo helpful to your project, please cite the paper below:
 
     -- Robust Hierarchical Density Estimation and Regression for Re-stained Whole Slide Image Co-registration
 
@@ -16,7 +20,8 @@ If you find this repo helpful to your project, please cite the paper below:
 3. data: data for replicating the figures in the paper.   
     Because each WSI takes up more than 4GB, we are not able to upload the original WSIs for demonstration. Some intermediate data in our experiments are provided to replicate our results.
 
-
+#### Reference
+1. 
 
 
 
