@@ -6,8 +6,8 @@ from getWSICases import get_co_registration_pairs
 RUN_SINGLE_PAIR = False
 ################################################
 data_dir = "Z:\\Mitosis_Deep Learning"
-save_to = "H:\\HE_IHC_Stains\\log.txt"
-cases_save_to = "H:\\HE_IHC_Stains\\case_names.npy"
+save_to = "H:\\HE_IHC\\HE_IHC_Stains\\log.txt"
+cases_save_to = "H:\\HE_IHC\\HE_IHC_Stains\\case_names.npy"
 if not os.path.exists(cases_save_to):
     WSI_pairs = get_co_registration_pairs(data_dir)
     np.save(cases_save_to, WSI_pairs)

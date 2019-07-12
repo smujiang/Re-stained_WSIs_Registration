@@ -29,7 +29,7 @@ def draw_cross_level_regression(ground_truth_offset,slop_kde,slop_score,offset_l
     if not os.path.exists(os.path.split(save_name)[0]):
         os.makedirs(os.path.split(save_name)[0], exist_ok=True)
     plt.savefig(save_name, dpi=300)
-    # plt.show()
+    plt.show()
     plt.close()
     print("OK")
 
@@ -51,9 +51,9 @@ if __name__ == '__main__':
     HE_IHC = ['HE_Caspase', 'HE_Ki67', 'HE_PHH3']
     # WSI_IDX = 0
     data_dir = "Z:\\Mitosis_Deep Learning"
-    result_root_dir = "H:\\HE_IHC_Stains"
-    cases_save_to = "H:\\HE_IHC_Stains\\case_names.npy"
-    ground_truth_csv = "H:\\HE_IHC_Stains\\log\\groundTruth_Jiang.csv"
+    result_root_dir = "H:\\HE_IHC\\HE_IHC_Stains"
+    cases_save_to = "H:\\HE_IHC\\HE_IHC_Stains\\case_names.npy"
+    ground_truth_csv = "H:\\HE_IHC\\HE_IHC_Stains\\log\\groundTruth_Jiang.csv"
     if not os.path.exists(cases_save_to):
         WSI_pairs = get_co_registration_pairs(data_dir)
         np.save(cases_save_to, WSI_pairs)

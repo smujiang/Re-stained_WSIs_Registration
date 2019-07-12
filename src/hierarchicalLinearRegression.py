@@ -7,8 +7,8 @@ from sklearn import datasets, linear_model
 from sklearn.metrics import mean_squared_error, r2_score
 
 methods = ["FFT", "SIFT_ENH","SIFT","ECC"]
-data_in_dir = "H:\\HE_IHC_Registration_result\\out_data"
-figure_out_dir = "H:\\HE_IHC_Registration_result\\final_figures"
+data_in_dir = "H:\\HE_IHC\\HE_IHC_Registration_result\\out_data"
+figure_out_dir = "H:\\HE_IHC\\HE_IHC_Registration_result\\final_figures"
 sub_dir = ['HE_Caspase', 'HE_Ki67', 'HE_PHH3']
 sub_dir_IHC = ['Caspase', 'Ki67', 'PHH3']
 plot_marker = ['.', 'o', '>', '+']
