@@ -1,0 +1,12 @@
+level0
+ExecutionTime(s):102.42799997329712
+FailureRate:0.63
+level1
+ExecutionTime(s):118.30200004577637
+FailureRate:1.0
+level2
+ExecutionTime(s):42.562000036239624
+FailureRate:1.0
+level3
+ExecutionTime(s):26.92200016975403
+FailureRate:1.0
