@@ -21,7 +21,9 @@ Our method provide a way to integrate these methods into a simple but effective 
     Because each WSI takes up more than 4GB, we are not able to upload the original WSIs for demonstration. Some intermediate data in our experiments are provided to replicate our results.
 
 #### Reference
-1. 
+1. Lowe, David G. "Object recognition from local scale-invariant features." In iccv, vol. 99, no. 2, pp. 1150-1157. 1999.
+2. Kim, Jeongtae, and Jeffrey A. Fessler. "Intensity-based image registration using robust correlation coefficients." IEEE transactions on medical imaging 23, no. 11 (2004): 1430-1444.
+3. Reddy, B. Srinivasa, and Biswanath N. Chatterji. "An FFT-based technique for translation, rotation, and scale-invariant image registration." IEEE transactions on image processing 5, no. 8 (1996): 1266-1271.
 
 
 
