@@ -471,10 +471,10 @@ def match_WSI(HE_Img_name, IHC_Img_name, methods, save_to_txt):
     locations_lv2 = getROIs(HE_Img, [0,0], level=2)
     locations_lv1 = getROIs(HE_Img, [0,0], level=1)
 
-    save_to = "H:\\HE_IHC\\HE_IHC_Stains\\sample_locations"
-    save_locations(locations_lv3, HE_n, save_to, 3)
-    save_locations(locations_lv2, HE_n, save_to, 2)
-    save_locations(locations_lv1, HE_n, save_to, 1)
+    # save_to = "H:\\HE_IHC\\HE_IHC_Stains\\sample_locations"
+    # save_locations(locations_lv3, HE_n, save_to, 3)
+    # save_locations(locations_lv2, HE_n, save_to, 2)
+    # save_locations(locations_lv1, HE_n, save_to, 1)
 
 
     if patch_size[0] < abs(init_offset[0]) or patch_size[0] < abs(init_offset[1]):
@@ -487,181 +487,181 @@ def match_WSI(HE_Img_name, IHC_Img_name, methods, save_to_txt):
         locations_lv3_IHC = locations_lv3
         locations_lv2_IHC = locations_lv2
         locations_lv1_IHC = locations_lv1
-    # # if not RELEASE:
-    # #     out_file = os.path.join("H://HE_IHC_Stains/thumbnails_rois", HE_n[:-4]+"lv3.png")
-    # #     locations_lv3 = getROIs_debug(HE_Img, init_offset, out_file, level=3)
-    # #     out_file = os.path.join("H://HE_IHC_Stains/thumbnails_rois", HE_n[:-4] + "lv2.png")
-    # #     locations_lv2 = getROIs_debug(HE_Img, init_offset, out_file, level=2)
-    # #     out_file = os.path.join("H://HE_IHC_Stains/thumbnails_rois", HE_n[:-4] + "lv1.png")
-    # #     locations_lv1 = getROIs_debug(HE_Img, init_offset, out_file, level=1)
-    # #     if VERBOSE:
-    # #         locations_lv0 = getROIs_debug(HE_Img, init_offset, out_file, level=0)
-    #
-    # print("Spend %s s" % str(time.time()-t0))
-    #
-    # print("Getting image patches from WSI")
-    # #######################################################
-    # # extract patches from image levels
-    # HE_Imgs_lv3 = get_img_patches(HE_Img, locations_lv3, patch_size[3], level=3, mod="HE")
-    # HE_Imgs_lv2 = get_img_patches(HE_Img, locations_lv2, patch_size[2], level=2, mod="HE")
-    # HE_Imgs_lv1 = get_img_patches(HE_Img, locations_lv1, patch_size[1], level=1, mod="HE")
-    #
-    # IHC_Imgs_lv3 = get_img_patches(IHC_Img, locations_lv3_IHC, patch_size[3], level=3, mod="IHC")
-    # IHC_Imgs_lv2 = get_img_patches(IHC_Img, locations_lv2_IHC, patch_size[2], level=2, mod="IHC")
-    # IHC_Imgs_lv1 = get_img_patches(IHC_Img, locations_lv1_IHC, patch_size[1], level=1, mod="IHC")
-    # #######################################################
-    # print("Spend %s s" % str(time.time()-t0))
-    # print("Getting raw registration")
-    # downsample_rate = HE_Img.level_downsamples
-    #
-    # if EN_FFT:
-    #     # FFT
-    #     print("FFT method")
-    #     Raw_FFT_lv3, scores_FFT_lv3 = raw_reg_batch(HE_Imgs_lv3, IHC_Imgs_lv3, init_offset, downsample_rate, level=3, method="FFT")
-    #     Raw_FFT_lv2, scores_FFT_lv2 = raw_reg_batch(HE_Imgs_lv2, IHC_Imgs_lv2, init_offset, downsample_rate, level=2, method="FFT")
-    #     Raw_FFT_lv1, scores_FFT_lv1 = raw_reg_batch(HE_Imgs_lv1, IHC_Imgs_lv1, init_offset, downsample_rate, level=1, method="FFT")
-    #
-    # if EN_ECC:
-    #     # ECC
-    #     print("ECC method")
-    #     Raw_ECC_lv3, scores_ECC_lv3 = raw_reg_batch(HE_Imgs_lv3, IHC_Imgs_lv3,init_offset, downsample_rate, level=3, method="ECC")
-    #     Raw_ECC_lv2, scores_ECC_lv2 = raw_reg_batch(HE_Imgs_lv2, IHC_Imgs_lv2,init_offset, downsample_rate, level=2, method="ECC")
-    #     Raw_ECC_lv1, scores_ECC_lv1 = raw_reg_batch(HE_Imgs_lv1, IHC_Imgs_lv1,init_offset, downsample_rate, level=1, method="ECC")
-    #
-    # if EN_SIFT:
-    #     # SIFT
-    #     print("SIFT method")
-    #     Raw_SIFT_lv3, scores_SIFT_lv3 = raw_reg_batch(HE_Imgs_lv3, IHC_Imgs_lv3,init_offset, downsample_rate, level=3, method="SIFT")
-    #     Raw_SIFT_lv2, scores_SIFT_lv2 = raw_reg_batch(HE_Imgs_lv2, IHC_Imgs_lv2,init_offset, downsample_rate, level=2, method="SIFT")
-    #     Raw_SIFT_lv1, scores_SIFT_lv1 = raw_reg_batch(HE_Imgs_lv1, IHC_Imgs_lv1,init_offset, downsample_rate, level=1, method="SIFT")
-    #
-    # if EN_SIFT_ENH:
-    #     # SIFT_ENH
-    #     print("SIFT_ENH method")
-    #     Raw_SIFT_ENH_lv3, scores_SIFT_ENH_lv3 = raw_reg_batch(HE_Imgs_lv3, IHC_Imgs_lv3,init_offset, downsample_rate, level=3, method="SIFT_ENH")
-    #     Raw_SIFT_ENH_lv2, scores_SIFT_ENH_lv2 = raw_reg_batch(HE_Imgs_lv2, IHC_Imgs_lv2,init_offset, downsample_rate, level=2, method="SIFT_ENH")
-    #     Raw_SIFT_ENH_lv1, scores_SIFT_ENH_lv1 = raw_reg_batch(HE_Imgs_lv1, IHC_Imgs_lv1,init_offset, downsample_rate, level=1, method="SIFT_ENH")
-    # #######################################################
-    # # KDE
-    # if EN_FFT:
-    #     KDE_weights_FFT_lv3 = offset_kde(Raw_FFT_lv3)
-    #     KDE_weights_FFT_lv2 = offset_kde(Raw_FFT_lv2)
-    #     KDE_weights_FFT_lv1 = offset_kde(Raw_FFT_lv1)
-    # if EN_ECC:
-    #     KDE_weights_ECC_lv3 = offset_kde(Raw_ECC_lv3)
-    #     KDE_weights_ECC_lv2 = offset_kde(Raw_ECC_lv2)
-    #     KDE_weights_ECC_lv1 = offset_kde(Raw_ECC_lv1)
-    # if EN_SIFT:
-    #     KDE_weights_SIFT_lv3 = offset_kde(Raw_SIFT_lv3)
-    #     KDE_weights_SIFT_lv2 = offset_kde(Raw_SIFT_lv2)
-    #     KDE_weights_SIFT_lv1 = offset_kde(Raw_SIFT_lv1)
-    # if EN_SIFT_ENH:
-    #     KDE_weights_SIFT_ENH_lv3 = offset_kde(Raw_SIFT_ENH_lv3)
-    #     KDE_weights_SIFT_ENH_lv2 = offset_kde(Raw_SIFT_ENH_lv2)
-    #     KDE_weights_SIFT_ENH_lv1 = offset_kde(Raw_SIFT_ENH_lv1)
-    # print("Spend %s s" % str(time.time()-t0))
-    # print("Getting refined offset")
-    # #######################################################
-    # if not os.path.exists(os.path.join(os.path.split(save_to_txt)[0], HE_n)):
-    #     os.makedirs(os.path.join(os.path.split(save_to_txt)[0], HE_n), exist_ok=True)
-    #
-    # # regression
-    # if EN_FFT:
-    #     KDE_offset_FFT,slp_kde_fft = HL_fit([Raw_FFT_lv3, Raw_FFT_lv2, Raw_FFT_lv1], [KDE_weights_FFT_lv3, KDE_weights_FFT_lv2, KDE_weights_FFT_lv1],downsample_rate)
-    #     Score_offset_FFT,slp_score_fft = HL_fit([Raw_FFT_lv3, Raw_FFT_lv2, Raw_FFT_lv1], [scores_FFT_lv3, scores_FFT_lv2, scores_FFT_lv1],downsample_rate)
-    #     print("KDE result: %d, %d" % (int(KDE_offset_FFT[0]), int(KDE_offset_FFT[1])))
-    #     print("Similarity result: %d, %d" % (int(Score_offset_FFT[0]), int(Score_offset_FFT[1])))
-    #     save_name_pkl = os.path.join(os.path.split(save_to_txt)[0], HE_n, "FFT_results.pickle")
-    #     offsets_fft = {"lv3": Raw_FFT_lv3, "lv2": Raw_FFT_lv2, "lv1": Raw_FFT_lv1,
-    #                    "lv3_score": scores_FFT_lv3, "lv2_score": scores_FFT_lv2, "lv1_score": scores_FFT_lv1,
-    #                    "lv3_kde": KDE_weights_FFT_lv3, "lv2_kde": KDE_weights_FFT_lv2, "lv1_kde": KDE_weights_FFT_lv1,
-    #                    "kde_res": KDE_offset_FFT, "kde_slp": slp_kde_fft, "score_res": Score_offset_FFT, "score_slp": slp_score_fft}
-    #     # np.save(save_name_pkl, offsets_fft)
-    #     f = open(save_name_pkl, "wb")
-    #     pickle.dump(offsets_fft, f)
-    #     f.close()
-    # if EN_ECC:
-    #     KDE_offset_ECC,slp_kde_ecc = HL_fit([Raw_ECC_lv3, Raw_ECC_lv2, Raw_ECC_lv1], [KDE_weights_ECC_lv3, KDE_weights_ECC_lv2, KDE_weights_ECC_lv1],downsample_rate)
-    #     Score_offset_ECC,slp_score_ecc = HL_fit([Raw_ECC_lv3, Raw_ECC_lv2, Raw_ECC_lv1], [scores_ECC_lv3, scores_ECC_lv2, scores_ECC_lv1],downsample_rate)
-    #     save_name_pkl = os.path.join(os.path.split(save_to_txt)[0], HE_n, "ECC_results.pickle")
-    #     offsets_ecc = {"lv3": Raw_ECC_lv3, "lv2": Raw_ECC_lv2, "lv1": Raw_ECC_lv1,
-    #                    "lv3_score": scores_ECC_lv3, "lv2_score": scores_ECC_lv2, "lv1_score": scores_ECC_lv1,
-    #                    "lv3_kde": KDE_weights_ECC_lv3, "lv2_kde": KDE_weights_ECC_lv2, "lv1_kde": KDE_weights_ECC_lv1,
-    #                    "kde_res": KDE_offset_ECC, "kde_slp": slp_kde_ecc, "score_res": Score_offset_ECC, "score_slp": slp_score_ecc}
-    #     # np.save(save_name_pkl, offsets_ecc)
-    #     f = open(save_name_pkl, "wb")
-    #     pickle.dump(offsets_ecc, f)
-    #     f.close()
-    # if EN_SIFT:
-    #     KDE_offset_SIFT,slp_kde_sift = HL_fit([Raw_SIFT_lv3, Raw_SIFT_lv2, Raw_SIFT_lv1], [KDE_weights_SIFT_lv3, KDE_weights_SIFT_lv2, KDE_weights_SIFT_lv1],downsample_rate)
-    #     Score_offset_SIFT,slp_score_sift = HL_fit([Raw_SIFT_lv3, Raw_SIFT_lv2, Raw_SIFT_lv1], [scores_SIFT_lv3, scores_SIFT_lv2, scores_SIFT_lv1],downsample_rate)
-    #     save_name_pkl = os.path.join(os.path.split(save_to_txt)[0], HE_n, "SIFT_results.pickle")
-    #     offsets_sift = {"lv3": Raw_SIFT_lv3, "lv2": Raw_SIFT_lv2, "lv1": Raw_SIFT_lv1,
-    #                     "lv3_score": scores_SIFT_lv3, "lv2_score": scores_SIFT_lv2, "lv1_score": scores_SIFT_lv1,
-    #                     "lv3_kde": KDE_weights_SIFT_lv3, "lv2_kde": KDE_weights_SIFT_lv2, "lv1_kde": KDE_weights_SIFT_lv1,
-    #                     "kde_res": KDE_offset_SIFT, "kde_slp": slp_kde_sift, "score_res": Score_offset_SIFT, "score_slp": slp_score_sift}
-    #     # np.save(save_name_pkl, offsets_sift)
-    #     f = open(save_name_pkl, "wb")
-    #     pickle.dump(offsets_sift, f)
-    #     f.close()
-    # if EN_SIFT_ENH:
-    #     KDE_offset_SIFT_ENH,slp_kde_sift_enh = HL_fit([Raw_SIFT_ENH_lv3, Raw_SIFT_ENH_lv2, Raw_SIFT_ENH_lv1],[KDE_weights_SIFT_ENH_lv3, KDE_weights_SIFT_ENH_lv2, KDE_weights_SIFT_ENH_lv1],downsample_rate)
-    #     Score_offset_SIFT_ENH,slp_score_sift_enh = HL_fit([Raw_SIFT_ENH_lv3, Raw_SIFT_ENH_lv2, Raw_SIFT_ENH_lv1], [scores_SIFT_ENH_lv3, scores_SIFT_ENH_lv2, scores_SIFT_ENH_lv1],downsample_rate)
-    #     save_name_pkl = os.path.join(os.path.split(save_to_txt)[0], HE_n, "SIFT_ENH_results.pickle")
-    #     offsets_sift_enh = {"lv3": Raw_SIFT_ENH_lv3, "lv2": Raw_SIFT_ENH_lv2, "lv1": Raw_SIFT_ENH_lv1,
-    #                         "lv3_score": scores_SIFT_ENH_lv3, "lv2_score": scores_SIFT_ENH_lv2, "lv1_score": scores_SIFT_ENH_lv1,
-    #                         "lv3_kde": KDE_weights_SIFT_ENH_lv3, "lv2_kde": KDE_weights_SIFT_ENH_lv2, "lv1_kde": KDE_weights_SIFT_ENH_lv1,
-    #                         "kde_res": KDE_offset_SIFT_ENH, "kde_slp": slp_kde_sift_enh, "score_res": Score_offset_SIFT_ENH, "score_slp": slp_score_sift_enh}
-    #     # np.save(save_name_pkl, offsets_sift_enh)
-    #     f = open(save_name_pkl, "wb")
-    #     pickle.dump(offsets_sift_enh, f)
-    #     f.close()
-    # if VERBOSE:
-    #     # draw figures
-    #     print("Draw evaluation figures")
-    #     ground_truth_csv = "H:\\HE_IHC_Stains\\log\\groundTruth_Jiang.csv"
-    #     ground_truth_offset = get_ground_truth(ground_truth_csv, HE_n)
-    #     print("Ground truth: %d, %d" % (int(ground_truth_offset[0]), int(ground_truth_offset[1])))
-    #     if EN_FFT:
-    #         save_name = os.path.join(os.path.split(save_to_txt)[0], HE_n, "FFT_cross_levels.png")
-    #         draw_cross_level_regression(ground_truth_offset, slp_kde_fft, slp_score_fft, offsets_fft, save_name, "FFT", get_he_ihcs(HE_n))
-    #     if EN_ECC:
-    #         save_name = os.path.join(os.path.split(save_to_txt)[0], HE_n, "ECC_cross_levels.png")
-    #         draw_cross_level_regression(ground_truth_offset, slp_kde_ecc, slp_score_ecc, offsets_ecc, save_name, "ECC", get_he_ihcs(HE_n))
-    #     if EN_SIFT:
-    #         save_name = os.path.join(os.path.split(save_to_txt)[0], HE_n, "SIFT_cross_levels.png")
-    #         draw_cross_level_regression(ground_truth_offset, slp_kde_sift, slp_score_sift, offsets_sift, save_name, "SIFT", get_he_ihcs(HE_n))
-    #     if EN_SIFT_ENH:
-    #         save_name = os.path.join(os.path.split(save_to_txt)[0], HE_n,"SIFT_ENH_cross_levels.png")
-    #         draw_cross_level_regression(ground_truth_offset, slp_kde_sift_enh, slp_score_sift_enh, offsets_sift_enh, save_name, "SIFT_ENH", get_he_ihcs(HE_n))
-    # print("Spend %s s" % str(time.time()-t0))
-    #
-    # f_ele = os.path.split(save_to_txt)
-    # sv_fn = os.path.splitext(f_ele[1])
-    # if EN_FFT:
-    #     save_to_txt_fft = os.path.join(f_ele[0], sv_fn[0]+"_fft.csv")
-    #     fp_sv = open(save_to_txt_fft, 'a')
-    #     wrt_str = ",".join([HE_n, IHC_n, str(KDE_offset_FFT[0]),str(KDE_offset_FFT[1]), str(Score_offset_FFT[0]), str(Score_offset_FFT[1])])
-    #     fp_sv.write(wrt_str+"\n")
-    #     fp_sv.close()
-    # if EN_ECC:
-    #     wrt_str = ",".join([HE_n, IHC_n, str(KDE_offset_ECC[0]),str(KDE_offset_ECC[1]), str(Score_offset_ECC[0]), str(Score_offset_ECC[1])])
-    #     save_to_txt_ecc = os.path.join(f_ele[0], sv_fn[0] + "_ecc.csv")
-    #     fp_sv = open(save_to_txt_ecc, 'a')
-    #     fp_sv.write(wrt_str+"\n")
-    #     fp_sv.close()
-    # if EN_SIFT:
-    #     wrt_str = ",".join([HE_n, IHC_n, str(KDE_offset_SIFT[0]),str(KDE_offset_SIFT[1]), str(Score_offset_SIFT[0]), str(Score_offset_SIFT[1])])
-    #     save_to_txt_sift = os.path.join(f_ele[0], sv_fn[0] + "_sift.csv")
-    #     fp_sv = open(save_to_txt_sift, 'a')
-    #     fp_sv.write(wrt_str+"\n")
-    #     fp_sv.close()
-    # if EN_SIFT_ENH:
-    #     wrt_str = ",".join([HE_n, IHC_n, str(KDE_offset_SIFT_ENH[0]),str(KDE_offset_SIFT_ENH[1]), str(Score_offset_SIFT_ENH[0]), str(Score_offset_SIFT_ENH[1])])
-    #     save_to_txt_sift_enh = os.path.join(f_ele[0], sv_fn[0] + "_sift_enh.csv")
-    #     fp_sv = open(save_to_txt_sift_enh, 'a')
-    #     fp_sv.write(wrt_str+"\n")
-    #     fp_sv.close()
+    # if not RELEASE:
+    #     out_file = os.path.join("H://HE_IHC_Stains/thumbnails_rois", HE_n[:-4]+"lv3.png")
+    #     locations_lv3 = getROIs_debug(HE_Img, init_offset, out_file, level=3)
+    #     out_file = os.path.join("H://HE_IHC_Stains/thumbnails_rois", HE_n[:-4] + "lv2.png")
+    #     locations_lv2 = getROIs_debug(HE_Img, init_offset, out_file, level=2)
+    #     out_file = os.path.join("H://HE_IHC_Stains/thumbnails_rois", HE_n[:-4] + "lv1.png")
+    #     locations_lv1 = getROIs_debug(HE_Img, init_offset, out_file, level=1)
+    #     if VERBOSE:
+    #         locations_lv0 = getROIs_debug(HE_Img, init_offset, out_file, level=0)
+
+    print("Spend %s s" % str(time.time()-t0))
+
+    print("Getting image patches from WSI")
+    #######################################################
+    # extract patches from image levels
+    HE_Imgs_lv3 = get_img_patches(HE_Img, locations_lv3, patch_size[3], level=3, mod="HE")
+    HE_Imgs_lv2 = get_img_patches(HE_Img, locations_lv2, patch_size[2], level=2, mod="HE")
+    HE_Imgs_lv1 = get_img_patches(HE_Img, locations_lv1, patch_size[1], level=1, mod="HE")
+
+    IHC_Imgs_lv3 = get_img_patches(IHC_Img, locations_lv3_IHC, patch_size[3], level=3, mod="IHC")
+    IHC_Imgs_lv2 = get_img_patches(IHC_Img, locations_lv2_IHC, patch_size[2], level=2, mod="IHC")
+    IHC_Imgs_lv1 = get_img_patches(IHC_Img, locations_lv1_IHC, patch_size[1], level=1, mod="IHC")
+    #######################################################
+    print("Spend %s s" % str(time.time()-t0))
+    print("Getting raw registration")
+    downsample_rate = HE_Img.level_downsamples
+
+    if EN_FFT:
+        # FFT
+        print("FFT method")
+        Raw_FFT_lv3, scores_FFT_lv3 = raw_reg_batch(HE_Imgs_lv3, IHC_Imgs_lv3, init_offset, downsample_rate, level=3, method="FFT")
+        Raw_FFT_lv2, scores_FFT_lv2 = raw_reg_batch(HE_Imgs_lv2, IHC_Imgs_lv2, init_offset, downsample_rate, level=2, method="FFT")
+        Raw_FFT_lv1, scores_FFT_lv1 = raw_reg_batch(HE_Imgs_lv1, IHC_Imgs_lv1, init_offset, downsample_rate, level=1, method="FFT")
+
+    if EN_ECC:
+        # ECC
+        print("ECC method")
+        Raw_ECC_lv3, scores_ECC_lv3 = raw_reg_batch(HE_Imgs_lv3, IHC_Imgs_lv3,init_offset, downsample_rate, level=3, method="ECC")
+        Raw_ECC_lv2, scores_ECC_lv2 = raw_reg_batch(HE_Imgs_lv2, IHC_Imgs_lv2,init_offset, downsample_rate, level=2, method="ECC")
+        Raw_ECC_lv1, scores_ECC_lv1 = raw_reg_batch(HE_Imgs_lv1, IHC_Imgs_lv1,init_offset, downsample_rate, level=1, method="ECC")
+
+    if EN_SIFT:
+        # SIFT
+        print("SIFT method")
+        Raw_SIFT_lv3, scores_SIFT_lv3 = raw_reg_batch(HE_Imgs_lv3, IHC_Imgs_lv3,init_offset, downsample_rate, level=3, method="SIFT")
+        Raw_SIFT_lv2, scores_SIFT_lv2 = raw_reg_batch(HE_Imgs_lv2, IHC_Imgs_lv2,init_offset, downsample_rate, level=2, method="SIFT")
+        Raw_SIFT_lv1, scores_SIFT_lv1 = raw_reg_batch(HE_Imgs_lv1, IHC_Imgs_lv1,init_offset, downsample_rate, level=1, method="SIFT")
+
+    if EN_SIFT_ENH:
+        # SIFT_ENH
+        print("SIFT_ENH method")
+        Raw_SIFT_ENH_lv3, scores_SIFT_ENH_lv3 = raw_reg_batch(HE_Imgs_lv3, IHC_Imgs_lv3,init_offset, downsample_rate, level=3, method="SIFT_ENH")
+        Raw_SIFT_ENH_lv2, scores_SIFT_ENH_lv2 = raw_reg_batch(HE_Imgs_lv2, IHC_Imgs_lv2,init_offset, downsample_rate, level=2, method="SIFT_ENH")
+        Raw_SIFT_ENH_lv1, scores_SIFT_ENH_lv1 = raw_reg_batch(HE_Imgs_lv1, IHC_Imgs_lv1,init_offset, downsample_rate, level=1, method="SIFT_ENH")
+    #######################################################
+    # KDE
+    if EN_FFT:
+        KDE_weights_FFT_lv3 = offset_kde(Raw_FFT_lv3)
+        KDE_weights_FFT_lv2 = offset_kde(Raw_FFT_lv2)
+        KDE_weights_FFT_lv1 = offset_kde(Raw_FFT_lv1)
+    if EN_ECC:
+        KDE_weights_ECC_lv3 = offset_kde(Raw_ECC_lv3)
+        KDE_weights_ECC_lv2 = offset_kde(Raw_ECC_lv2)
+        KDE_weights_ECC_lv1 = offset_kde(Raw_ECC_lv1)
+    if EN_SIFT:
+        KDE_weights_SIFT_lv3 = offset_kde(Raw_SIFT_lv3)
+        KDE_weights_SIFT_lv2 = offset_kde(Raw_SIFT_lv2)
+        KDE_weights_SIFT_lv1 = offset_kde(Raw_SIFT_lv1)
+    if EN_SIFT_ENH:
+        KDE_weights_SIFT_ENH_lv3 = offset_kde(Raw_SIFT_ENH_lv3)
+        KDE_weights_SIFT_ENH_lv2 = offset_kde(Raw_SIFT_ENH_lv2)
+        KDE_weights_SIFT_ENH_lv1 = offset_kde(Raw_SIFT_ENH_lv1)
+    print("Spend %s s" % str(time.time()-t0))
+    print("Getting refined offset")
+    #######################################################
+    if not os.path.exists(os.path.join(os.path.split(save_to_txt)[0], HE_n)):
+        os.makedirs(os.path.join(os.path.split(save_to_txt)[0], HE_n), exist_ok=True)
+
+    # regression
+    if EN_FFT:
+        KDE_offset_FFT,slp_kde_fft = HL_fit([Raw_FFT_lv3, Raw_FFT_lv2, Raw_FFT_lv1], [KDE_weights_FFT_lv3, KDE_weights_FFT_lv2, KDE_weights_FFT_lv1],downsample_rate)
+        Score_offset_FFT,slp_score_fft = HL_fit([Raw_FFT_lv3, Raw_FFT_lv2, Raw_FFT_lv1], [scores_FFT_lv3, scores_FFT_lv2, scores_FFT_lv1],downsample_rate)
+        print("KDE result: %d, %d" % (int(KDE_offset_FFT[0]), int(KDE_offset_FFT[1])))
+        print("Similarity result: %d, %d" % (int(Score_offset_FFT[0]), int(Score_offset_FFT[1])))
+        save_name_pkl = os.path.join(os.path.split(save_to_txt)[0], HE_n, "FFT_results.pickle")
+        offsets_fft = {"lv3": Raw_FFT_lv3, "lv2": Raw_FFT_lv2, "lv1": Raw_FFT_lv1,
+                       "lv3_score": scores_FFT_lv3, "lv2_score": scores_FFT_lv2, "lv1_score": scores_FFT_lv1,
+                       "lv3_kde": KDE_weights_FFT_lv3, "lv2_kde": KDE_weights_FFT_lv2, "lv1_kde": KDE_weights_FFT_lv1,
+                       "kde_res": KDE_offset_FFT, "kde_slp": slp_kde_fft, "score_res": Score_offset_FFT, "score_slp": slp_score_fft}
+        # np.save(save_name_pkl, offsets_fft)
+        f = open(save_name_pkl, "wb")
+        pickle.dump(offsets_fft, f)
+        f.close()
+    if EN_ECC:
+        KDE_offset_ECC,slp_kde_ecc = HL_fit([Raw_ECC_lv3, Raw_ECC_lv2, Raw_ECC_lv1], [KDE_weights_ECC_lv3, KDE_weights_ECC_lv2, KDE_weights_ECC_lv1],downsample_rate)
+        Score_offset_ECC,slp_score_ecc = HL_fit([Raw_ECC_lv3, Raw_ECC_lv2, Raw_ECC_lv1], [scores_ECC_lv3, scores_ECC_lv2, scores_ECC_lv1],downsample_rate)
+        save_name_pkl = os.path.join(os.path.split(save_to_txt)[0], HE_n, "ECC_results.pickle")
+        offsets_ecc = {"lv3": Raw_ECC_lv3, "lv2": Raw_ECC_lv2, "lv1": Raw_ECC_lv1,
+                       "lv3_score": scores_ECC_lv3, "lv2_score": scores_ECC_lv2, "lv1_score": scores_ECC_lv1,
+                       "lv3_kde": KDE_weights_ECC_lv3, "lv2_kde": KDE_weights_ECC_lv2, "lv1_kde": KDE_weights_ECC_lv1,
+                       "kde_res": KDE_offset_ECC, "kde_slp": slp_kde_ecc, "score_res": Score_offset_ECC, "score_slp": slp_score_ecc}
+        # np.save(save_name_pkl, offsets_ecc)
+        f = open(save_name_pkl, "wb")
+        pickle.dump(offsets_ecc, f)
+        f.close()
+    if EN_SIFT:
+        KDE_offset_SIFT,slp_kde_sift = HL_fit([Raw_SIFT_lv3, Raw_SIFT_lv2, Raw_SIFT_lv1], [KDE_weights_SIFT_lv3, KDE_weights_SIFT_lv2, KDE_weights_SIFT_lv1],downsample_rate)
+        Score_offset_SIFT,slp_score_sift = HL_fit([Raw_SIFT_lv3, Raw_SIFT_lv2, Raw_SIFT_lv1], [scores_SIFT_lv3, scores_SIFT_lv2, scores_SIFT_lv1],downsample_rate)
+        save_name_pkl = os.path.join(os.path.split(save_to_txt)[0], HE_n, "SIFT_results.pickle")
+        offsets_sift = {"lv3": Raw_SIFT_lv3, "lv2": Raw_SIFT_lv2, "lv1": Raw_SIFT_lv1,
+                        "lv3_score": scores_SIFT_lv3, "lv2_score": scores_SIFT_lv2, "lv1_score": scores_SIFT_lv1,
+                        "lv3_kde": KDE_weights_SIFT_lv3, "lv2_kde": KDE_weights_SIFT_lv2, "lv1_kde": KDE_weights_SIFT_lv1,
+                        "kde_res": KDE_offset_SIFT, "kde_slp": slp_kde_sift, "score_res": Score_offset_SIFT, "score_slp": slp_score_sift}
+        # np.save(save_name_pkl, offsets_sift)
+        f = open(save_name_pkl, "wb")
+        pickle.dump(offsets_sift, f)
+        f.close()
+    if EN_SIFT_ENH:
+        KDE_offset_SIFT_ENH,slp_kde_sift_enh = HL_fit([Raw_SIFT_ENH_lv3, Raw_SIFT_ENH_lv2, Raw_SIFT_ENH_lv1],[KDE_weights_SIFT_ENH_lv3, KDE_weights_SIFT_ENH_lv2, KDE_weights_SIFT_ENH_lv1],downsample_rate)
+        Score_offset_SIFT_ENH,slp_score_sift_enh = HL_fit([Raw_SIFT_ENH_lv3, Raw_SIFT_ENH_lv2, Raw_SIFT_ENH_lv1], [scores_SIFT_ENH_lv3, scores_SIFT_ENH_lv2, scores_SIFT_ENH_lv1],downsample_rate)
+        save_name_pkl = os.path.join(os.path.split(save_to_txt)[0], HE_n, "SIFT_ENH_results.pickle")
+        offsets_sift_enh = {"lv3": Raw_SIFT_ENH_lv3, "lv2": Raw_SIFT_ENH_lv2, "lv1": Raw_SIFT_ENH_lv1,
+                            "lv3_score": scores_SIFT_ENH_lv3, "lv2_score": scores_SIFT_ENH_lv2, "lv1_score": scores_SIFT_ENH_lv1,
+                            "lv3_kde": KDE_weights_SIFT_ENH_lv3, "lv2_kde": KDE_weights_SIFT_ENH_lv2, "lv1_kde": KDE_weights_SIFT_ENH_lv1,
+                            "kde_res": KDE_offset_SIFT_ENH, "kde_slp": slp_kde_sift_enh, "score_res": Score_offset_SIFT_ENH, "score_slp": slp_score_sift_enh}
+        # np.save(save_name_pkl, offsets_sift_enh)
+        f = open(save_name_pkl, "wb")
+        pickle.dump(offsets_sift_enh, f)
+        f.close()
+    if VERBOSE:
+        # draw figures
+        print("Draw evaluation figures")
+        ground_truth_csv = "H:\\HE_IHC_Stains\\log\\groundTruth_Jiang.csv"
+        ground_truth_offset = get_ground_truth(ground_truth_csv, HE_n)
+        print("Ground truth: %d, %d" % (int(ground_truth_offset[0]), int(ground_truth_offset[1])))
+        if EN_FFT:
+            save_name = os.path.join(os.path.split(save_to_txt)[0], HE_n, "FFT_cross_levels.png")
+            draw_cross_level_regression(ground_truth_offset, slp_kde_fft, slp_score_fft, offsets_fft, save_name, "FFT", get_he_ihcs(HE_n))
+        if EN_ECC:
+            save_name = os.path.join(os.path.split(save_to_txt)[0], HE_n, "ECC_cross_levels.png")
+            draw_cross_level_regression(ground_truth_offset, slp_kde_ecc, slp_score_ecc, offsets_ecc, save_name, "ECC", get_he_ihcs(HE_n))
+        if EN_SIFT:
+            save_name = os.path.join(os.path.split(save_to_txt)[0], HE_n, "SIFT_cross_levels.png")
+            draw_cross_level_regression(ground_truth_offset, slp_kde_sift, slp_score_sift, offsets_sift, save_name, "SIFT", get_he_ihcs(HE_n))
+        if EN_SIFT_ENH:
+            save_name = os.path.join(os.path.split(save_to_txt)[0], HE_n,"SIFT_ENH_cross_levels.png")
+            draw_cross_level_regression(ground_truth_offset, slp_kde_sift_enh, slp_score_sift_enh, offsets_sift_enh, save_name, "SIFT_ENH", get_he_ihcs(HE_n))
+    print("Spend %s s" % str(time.time()-t0))
+
+    f_ele = os.path.split(save_to_txt)
+    sv_fn = os.path.splitext(f_ele[1])
+    if EN_FFT:
+        save_to_txt_fft = os.path.join(f_ele[0], sv_fn[0]+"_fft.csv")
+        fp_sv = open(save_to_txt_fft, 'a')
+        wrt_str = ",".join([HE_n, IHC_n, str(KDE_offset_FFT[0]),str(KDE_offset_FFT[1]), str(Score_offset_FFT[0]), str(Score_offset_FFT[1])])
+        fp_sv.write(wrt_str+"\n")
+        fp_sv.close()
+    if EN_ECC:
+        wrt_str = ",".join([HE_n, IHC_n, str(KDE_offset_ECC[0]),str(KDE_offset_ECC[1]), str(Score_offset_ECC[0]), str(Score_offset_ECC[1])])
+        save_to_txt_ecc = os.path.join(f_ele[0], sv_fn[0] + "_ecc.csv")
+        fp_sv = open(save_to_txt_ecc, 'a')
+        fp_sv.write(wrt_str+"\n")
+        fp_sv.close()
+    if EN_SIFT:
+        wrt_str = ",".join([HE_n, IHC_n, str(KDE_offset_SIFT[0]),str(KDE_offset_SIFT[1]), str(Score_offset_SIFT[0]), str(Score_offset_SIFT[1])])
+        save_to_txt_sift = os.path.join(f_ele[0], sv_fn[0] + "_sift.csv")
+        fp_sv = open(save_to_txt_sift, 'a')
+        fp_sv.write(wrt_str+"\n")
+        fp_sv.close()
+    if EN_SIFT_ENH:
+        wrt_str = ",".join([HE_n, IHC_n, str(KDE_offset_SIFT_ENH[0]),str(KDE_offset_SIFT_ENH[1]), str(Score_offset_SIFT_ENH[0]), str(Score_offset_SIFT_ENH[1])])
+        save_to_txt_sift_enh = os.path.join(f_ele[0], sv_fn[0] + "_sift_enh.csv")
+        fp_sv = open(save_to_txt_sift_enh, 'a')
+        fp_sv.write(wrt_str+"\n")
+        fp_sv.close()
 
 
 def match_WSI_level0(HE_Img_name, IHC_Img_name, methods, save_to_txt):
