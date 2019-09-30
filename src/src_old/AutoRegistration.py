@@ -323,7 +323,6 @@ def norm(rvalue, newmin, newmax):
     else:
         scale = newrange / oldrange
         normal = [(v - oldmin) * scale + newmin for v in rvalue]
-
     return normal
 
 
@@ -467,9 +466,9 @@ def match_WSI(HE_Img_name, IHC_Img_name, methods, save_to_txt):
     # get initial position, just in case the initial offset is too large
     init_offset = get_initial_pos(HE_Img, IHC_Img)
 
-    locations_lv3 = getROIs(HE_Img, [0,0], level=3)
-    locations_lv2 = getROIs(HE_Img, [0,0], level=2)
-    locations_lv1 = getROIs(HE_Img, [0,0], level=1)
+    locations_lv3 = getROIs(HE_Img, [0, 0], level=3)
+    locations_lv2 = getROIs(HE_Img, [0, 0], level=2)
+    locations_lv1 = getROIs(HE_Img, [0, 0], level=1)
 
     # save_to = "H:\\HE_IHC\\HE_IHC_Stains\\sample_locations"
     # save_locations(locations_lv3, HE_n, save_to, 3)
