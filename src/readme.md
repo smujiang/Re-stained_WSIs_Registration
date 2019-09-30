@@ -6,7 +6,7 @@
     You just need to copy tsv file ./src/tissue_detection/tissue_others.tsv and ./src/wsi_registration.py to your project, and it's ready to run.
 
 
-<span style="color: #888888">
+--------
 
 ### You can go though the workflow step by step
 1. get image patches(getImgPatches.py)
@@ -21,4 +21,3 @@
 ### You can also refer to an end-to-end solution for multiple pairs of WSIs
 modify the data path in run_all.py and run.
 
-</span>
