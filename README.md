@@ -33,6 +33,18 @@ Our method provide a way to integrate these methods into a simple but effective 
 2. Kim, Jeongtae, and Jeffrey A. Fessler. "Intensity-based image registration using robust correlation coefficients." IEEE transactions on medical imaging 23, no. 11 (2004): 1430-1444.
 3. Reddy, B. Srinivasa, and Biswanath N. Chatterji. "An FFT-based technique for translation, rotation, and scale-invariant image registration." IEEE transactions on image processing 5, no. 8 (1996): 1266-1271.
 
+### Update log
+09/30/2019
+1. upload an easy to use version. 
+Previous code contains lots of bulky parts for methods comparison/evaluation, now the code has been dramatically simplified.
+Code and example can be find in ./src/wsi_registration.py. 
+You just need to copy tsv file ./src/tissue_detection/tissue_others.tsv and ./src/wsi_registration.py to your project, and it's ready to run.
 
+##### Dependent python packages
+scipy   
+sklearn   
+skimage   
+cv2   
+numpy
 
 
