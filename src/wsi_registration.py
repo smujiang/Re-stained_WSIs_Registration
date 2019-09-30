@@ -34,6 +34,25 @@ class TissueDetector:
         gnb_bkg.fit(bkg_train_data[:, 1:], bkg_train_data[:, 0])
         return gnb_bkg
 
+    def predict(self, wsi_thumb_img, open_operation=False):
+        if self.name == "Thresholding":
+            gray_array = np.asarray(wsi_thumb_img.convert('L'))
+            binary_img_array = (gray_array < self.threshold) * 255  # tissue is darker than background
+        elif self.name == "GNB":  # Gaussian Naive Bayes
+            marked_thumbnail = np.array(wsi_thumb_img)
+            gnb_model = self.get_gnb_model()
+            cal = gnb_model.predict_proba(marked_thumbnail.reshape(-1, 3))
+            cal = cal.reshape(marked_thumbnail.shape[0], marked_thumbnail.shape[1], 2)
+            binary_img_array = cal[:, :, 1] > self.threshold
+        else:
+            raise Exception("Undefined model")
+        # plt.imshow(binary_img_array)
+        # plt.show()
+        if open_operation:
+            binary_img_array = ndimage.binary_opening(binary_img_array, structure=np.ones((5, 5))).astype(
+                binary_img_array.dtype)  # open operation
+        return binary_img_array
+
 
 class MatcherParameters:
     def __init__(self, layer_patch_num=None, layer_patch_max_try=None, layer_patch_size=None, rescale_rate=0):
@@ -134,23 +153,6 @@ class WSI_Matcher:
             init_reg_offset = (0, 0)
             return init_reg_offset, reg_status
 
-    # get foreground for patch sampling
-    @staticmethod
-    def get_foreground(wsi_thumb_img, model, open_operation=False):
-        if model.name == "Thresholding":
-            gray_array = np.asarray(wsi_thumb_img.convert('L'))
-            binary_img_array = (gray_array < model.threshold) * 255  # tissue is darker than background
-        elif model.name == "GNB":   # Gaussian Naive Bayes
-            marked_thumbnail = np.array(wsi_thumb_img)
-            gnb_model = model.get_gnb_model()
-            cal = gnb_model.predict_proba(marked_thumbnail.reshape(-1, 3))
-            cal = cal.reshape(marked_thumbnail.shape[0], marked_thumbnail.shape[1], 2)
-            binary_img_array = cal[:, :, 1] > model.threshold
-        else:
-            raise Exception("Undefined model")
-        if open_operation:
-            binary_img_array = ndimage.binary_opening(binary_img_array, structure=np.ones((5, 5))).astype(binary_img_array.dtype)  # open operation
-        return binary_img_array
 
     @staticmethod
     def get_sample_locations(wsi_thumb_mask, init_offset, sample_cnt, thumb_rescale=128, from_fixed_thumb=True):
@@ -167,7 +169,7 @@ class WSI_Matcher:
         return [fixed_loc_x, fixed_loc_y], [float_loc_x, float_loc_y]
 
     def get_all_sample_indices(self, thumbnail_fixed, init_offset, rescale_rate, patch_counts):
-        fixed_foreground_mask = self.get_foreground(thumbnail_fixed, self.tissue_detector, open_operation=True)
+        fixed_foreground_mask = self.tissue_detector.predict(thumbnail_fixed, open_operation=True)
         indices = {}
         for i in range(len(patch_counts)):  # layers
             fixed_indices, float_indices = self.get_sample_locations(fixed_foreground_mask, init_offset, patch_counts[i], thumb_rescale=rescale_rate, from_fixed_thumb=True)
