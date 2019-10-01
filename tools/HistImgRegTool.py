@@ -187,7 +187,7 @@ class ImgRegistration(QWidget):
         Visit my Github(https://github.com/smujiang) for more information", QMessageBox.Ok)
 
     def AutoReg(self):
-        # QMessageBox.information(self, 'Message', "Pending", QMessageBox.Ok)
+        # Our method is little bit time-consuming for UI application, currently, we just align them on thumbnail level.
         WSI_Width, WSI_Height = self.sd_fix.dimensions
         thumb_size_x = round(WSI_Width / 100)
         thumb_size_y = round(WSI_Height / 100)
