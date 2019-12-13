@@ -40,17 +40,10 @@ print("Shifting offset: %d %d" % offset)
 ### Update log
 09/30/2019
 1. upload an easy to use version. 
-Previous code contains lots of bulky parts for methods comparison/evaluation, now the code has been dramatically simplified.
-Code and example can be find in ./src/wsi_registration.py. 
+Previous code contains lots of bulky parts for methods comparison/evaluation, now the code has been dramatically simplified.   
+Code and example can be find in ./src/wsi_registration.py.   
 You just need to copy tsv file ./src/tissue_detection/tissue_others.tsv and ./src/wsi_registration.py to your project, and it's ready to run.
 
-##### Dependent python packages
-scipy   
-sklearn   
-skimage   
-cv2   
-numpy
-OpenSlide
 #### Description of directories  
 1. tools: WSI matching tools for manually registration and validation   
 2. src: implementation of method presented in the paper, you can have more details in the readme.md in this folder. You can see how to use this method in ./src/wsi_registration.py
