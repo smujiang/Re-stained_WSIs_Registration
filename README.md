@@ -16,7 +16,7 @@ Our method provide a way to integrate these methods into a simple but effective 
   publisher={Cold Spring Harbor Laboratory}
 }
 ```
-##Quick Start
+## Quick Start
 Copy our src folder to local, use the following code to calculate shifting offset. 
 ```python
 from wsi_registration import TissueDetector, MatcherParameters, WSI_Matcher
