@@ -17,7 +17,12 @@ Our method provide a way to integrate these methods into a simple but effective 
 }
 ```
 ## Quick Start
-Copy our src folder to local, use the following code to calculate shifting offset. 
+* install dependent python packages
+```
+conda install -c conda-forge scipy scikit-learn scikit-image opencv openslide
+```
+> You may need to [install OpenSlide library](https://gist.github.com/digvijayky/b01c3f5e05ea0619c26d1bcc323c3761) other than python interface.
+* Copy our src folder to local, use the following code to calculate shifting offset. 
 ```python
 from wsi_registration import TissueDetector, MatcherParameters, WSI_Matcher
 fixed_wsi = "/fixed_file_name"  # file name of your fixed (template) whole slide image
@@ -45,7 +50,7 @@ sklearn
 skimage   
 cv2   
 numpy
-
+OpenSlide
 #### Description of directories  
 1. tools: WSI matching tools for manually registration and validation   
 2. src: implementation of method presented in the paper, you can have more details in the readme.md in this folder. You can see how to use this method in ./src/wsi_registration.py
