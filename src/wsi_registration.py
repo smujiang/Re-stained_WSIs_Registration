@@ -35,9 +35,13 @@ class TissueDetector:
         return gnb_bkg
 
     def predict(self, wsi_thumb_img, open_operation=False):
-        if self.name == "Thresholding":
-            gray_array = np.asarray(wsi_thumb_img.convert('L'))
-            binary_img_array = (gray_array < self.threshold) * 255  # tissue is darker than background
+        if self.name == "LAB_Threshold":
+            lab_img = rgb2lab(wsi_thumb_img)
+            l_img = lab_img[:, :, 0]
+            # tissue is darker than background, recommend threshold value: 85
+            binary_img_array_1 = np.array(0 < l_img)
+            binary_img_array_2 = np.array(l_img < self.threshold)
+            binary_img_array = np.logical_and(binary_img_array_1, binary_img_array_2) * 255
         elif self.name == "GNB":  # Gaussian Naive Bayes
             marked_thumbnail = np.array(wsi_thumb_img)
             gnb_model = self.get_gnb_model()
@@ -332,15 +336,6 @@ class WSI_Matcher:
         return result
 
 
-# example
-if __name__ == '__main__':
-    fixed_wsi = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/7bb50b5d9dcf4e53ad311d66136ae00f.tiff"
-    float_wsi = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean/8a26a55a78b947059da4e8c36709a828.tiff"
-    tissue_detector = TissueDetector("GNB", threshold=0.5)
-    matcher_parameters = MatcherParameters()
-    matcher = WSI_Matcher(tissue_detector, matcher_parameters)
-    offset = matcher.match(fixed_wsi, float_wsi)
-    print("Final result: %d %d" % offset)
 
 
 
