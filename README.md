@@ -5,7 +5,7 @@ In clinical practice, we occasionally use different chemicals (such as H&E and I
 To enable cell level analysis, WSIs should be aligned. However, traditional methods (such as SIFT[1], ECC[2] and FFT[3]) may fail due to the drastic discrepancy in two WSIs,as showing below. 
 ![alt text](./img_sample.png)   
 
-Our method provide a way to integrate these methods into a simple but effective framework, and help these methods perform more robust. If you find this repo is helpful for your project, please cite our paper:
+Our method provide a way to integrate these methods into a simple but effective framework, and help these methods perform more robust. If you find this repo is helpful for your project, please cite our [paper](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0220074):
 ```
 @article{jiang2019robust,
   title={Robust Hierarchical Density Estimation and Regression for Re-stained Histological Whole Slide Image Co-registration},
