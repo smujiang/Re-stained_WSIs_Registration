@@ -6,7 +6,8 @@ from scipy.stats import gaussian_kde
 from skimage.color import rgb2lab
 from sklearn.naive_bayes import GaussianNB
 from sklearn import linear_model
-
+import matplotlib.pyplot as plt
+import logging
 
 class TissueDetector:
     def __init__(self, name, threshold=0.5, training_files=""):
@@ -207,12 +208,19 @@ class WSI_Matcher:
                 if Content_rich_fixed and Content_rich_float:
                     # p_offset, reg_status = get_initial_pos(fixed_patch, float_patch, layer_rescale_factors[l])
                     p_offset, reg_status = self.fast_reg(fixed_patch, float_patch, layer_rescale_factors[l])
+                    if logging.DEBUG == logging.root.level:
+                        fig = plt.figure()
+                        ax1 = fig.add_subplot(121)
+                        ax1.imshow(fixed_patch)
+                        ax2 = fig.add_subplot(122)
+                        ax2.imshow(float_patch)
+                        plt.show()
                     if reg_status > 0:
                         layer_match_offset.append([p_offset[0], p_offset[1]])
                         layer_matched_patch_cnt += 1
                     if layer_matched_patch_cnt == layer_patch_num[l]:
                         break
-            print("Get %d reliable offsets from level %d" % (len(layer_match_offset), l+1))
+            logging.debug("Get %d reliable offsets from level %d" % (len(layer_match_offset), l+1))
             patches_match_offset_dic["level_" + str(l + 1)] = layer_match_offset
         return patches_match_offset_dic
 
@@ -294,7 +302,7 @@ class WSI_Matcher:
                 kde_scores = gaussian_kde(xy)(xy)
                 norm_kde_scores = self.norm(kde_scores, 0, 1)
                 select_layer_offsets = layer_offsets[np.where(np.array(norm_kde_scores) > kde_threshold)]
-                # print(np.mean(select_layer_offsets, axis=0))
+                # logging.debug(np.mean(select_layer_offsets, axis=0))
                 reg_layers = np.vstack([reg_layers, np.mean(select_layer_offsets, axis=0)])
             elif len(layer_offsets) > 0:
                 reg_layers = np.vstack([reg_layers, np.mean(layer_offsets, axis=0)])
@@ -316,7 +324,7 @@ class WSI_Matcher:
 
         if status == 0:
             raise Exception("Can't align thumbnail")
-        print("Initial offset: %f, %f" % (init_offset[0], init_offset[1]))
+        logging.debug("Initial offset: %f, %f" % (init_offset[0], init_offset[1]))
 
         indices_dict = self.get_all_sample_indices(thumbnail_fixed, init_offset, rescale_rate, layer_patch_max_num)
         offset_dict = self.match_sample_patches(fixed_wsi_obj, float_wsi_obj, indices_dict, layer_patch_num, layer_patch_size, layer_rescale_factors)
