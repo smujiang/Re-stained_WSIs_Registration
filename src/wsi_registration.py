@@ -51,8 +51,9 @@ class TissueDetector:
             binary_img_array = cal[:, :, 1] > self.threshold
         else:
             raise Exception("Undefined model")
-        # plt.imshow(binary_img_array)
-        # plt.show()
+        if logging.DEBUG == logging.root.level:
+            plt.imshow(binary_img_array)
+            plt.show()
         if open_operation:
             binary_img_array = ndimage.binary_opening(binary_img_array, structure=np.ones((5, 5))).astype(
                 binary_img_array.dtype)  # open operation
@@ -342,14 +343,5 @@ class WSI_Matcher:
             result = np.mean(np.array(reg_layers), axis=0)
         result = (init_offset[0] + result[0], init_offset[1] + result[1])
         return result
-
-
-
-
-
-
-
-
-
 
 
