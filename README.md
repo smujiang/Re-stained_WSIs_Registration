@@ -25,6 +25,7 @@ conda install -c conda-forge scipy scikit-learn scikit-image opencv openslide
 * Copy our src folder to local, use the following code to calculate shifting offset. 
 ```python
 from wsi_registration import TissueDetector, MatcherParameters, WSI_Matcher
+import logging
 fixed_wsi = "/fixed_file_name"  # file name of your fixed (template) whole slide image
 float_wsi = "/float_file_name"  # file name of your float (moving) whole slide image
 # define the tissue detector, so the patches can be sampled
@@ -33,6 +34,7 @@ tissue_detector = TissueDetector("LAB_Threshold", threshold=80) # option 1
 matcher_parameters = MatcherParameters()  # use the default parameters
 matcher = WSI_Matcher(tissue_detector, matcher_parameters)
 offset = matcher.match(fixed_wsi, float_wsi)
+logging.debug("Shifting offset: %d %d" % offset)
 print("Shifting offset: %d %d" % offset)
 ```
 > We use [OpenSlide](https://openslide.org/) to parse WSI pairs, please make sure your file format is supported by this API.
