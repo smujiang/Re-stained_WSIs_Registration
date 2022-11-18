@@ -3,7 +3,7 @@
 This is a repo about whole slide image(WSI) registration for re-stained slides.   
 In clinical practice, we occasionally use different chemicals (such as H&E and IHC) to stain and re-stain to identify particular cells in the same tissue.
 To enable cell level analysis, WSIs should be aligned. However, traditional methods (such as SIFT[1], ECC[2] and FFT[3]) may fail due to the drastic discrepancy in two WSIs,as showing below. 
-![alt text](./data/figures/Picture1.png)   
+![alt text](./data/figures/figures-4.tif)   
 
 Our method provide a way to integrate these methods into a simple but effective framework, and help these methods perform more robust. If you find this repo is helpful for your project, please cite our [paper](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0220074):
 ```
